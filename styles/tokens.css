@@ -1,0 +1,43 @@
+:root {
+  --bg: #05080f;
+  --bg-soft: #0c1321;
+  --card: rgba(255, 255, 255, 0.06);
+  --card-solid: #101827;
+  --text: #eef5ff;
+  --text-soft: #9aa6c2;
+  --line: rgba(255, 255, 255, 0.1);
+  --accent: #7ea8ff;
+  --accent-soft: #b5c7ff;
+  --border: rgba(255, 255, 255, 0.08);
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 20px;
+  --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+body {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top, rgba(126, 168, 255, 0.12), transparent 35%),
+    linear-gradient(180deg, #070b14 0%, #070b14 100%);
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(126, 168, 255, 0.2);
+  color: var(--text);
+}
