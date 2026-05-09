@@ -183,10 +183,11 @@ export function CalendarView({ tasks, onEdit, onToggle, onDelete }: Props) {
                 <div className="calendar-task-meta">
                   <span className="calendar-task-meta__type">{getTaskTypeLabel(task)}</span>
                   <span className="calendar-task-meta__date">
-                    {fmtDate(parseLocalDate(toDateOnly(task.date_start)))}
                     {task.date_end && task.date_end !== task.date_start
-                      ? ` ~ ${fmtDate(parseLocalDate(toDateOnly(task.date_end)))}`
-                      : ""}
+                      ? `${fmtDate(parseLocalDate(toDateOnly(task.date_start)))} ~ ${fmtDate(
+                          parseLocalDate(toDateOnly(task.date_end)),
+                        )}`
+                      : fmtDate(parseLocalDate(toDateOnly(task.date_start)))}
                   </span>
                 </div>
 
