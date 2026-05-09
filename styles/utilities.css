@@ -608,3 +608,16 @@
   color: var(--text-soft);
   min-width: 0;
 }
+
+.calendar-event-chip {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.calendar-event-chip__text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
