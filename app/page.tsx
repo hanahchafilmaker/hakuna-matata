@@ -1,4 +1,4 @@
-"use client";
+ï»¿"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
@@ -52,7 +52,7 @@ export default function Page() {
     setDraft({
       date_start: todayStr(),
       date_end: todayStr(),
-      assignee: "ÇÏ³ª",
+      assignee: "í•˜ë‚˜",
       type: "ui",
       repeat: "none",
       done: false,
@@ -83,7 +83,7 @@ export default function Page() {
       }
       setModalOpen(false);
     } catch (error) {
-      console.error("ÀúÀå Áß ¿À·ù", error);
+      console.error("ì €ì¥ ì¤‘ ì˜¤ë¥˜", error);
     } finally {
       setSaving(false);
     }
@@ -98,7 +98,7 @@ export default function Page() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("ÀÌ ÀÏÁ¤À» »èÁ¦ÇÒ±î¿ä?")) return;
+    if (!confirm("ì´ ì¼ì •ì„ ì‚­ì œí• ê¹Œìš”?")) return;
 
     try {
       await deleteTask(id);
@@ -149,7 +149,7 @@ export default function Page() {
           )}
         </div>
 
-        <button type="button" className="fab" onClick={openAdd} aria-label="ÀÏÁ¤ Ãß°¡">
+        <button type="button" className="fab" onClick={openAdd} aria-label="ì¼ì • ì¶”ê°€">
           +
         </button>
 
@@ -166,3 +166,4 @@ export default function Page() {
     </>
   );
 }
+

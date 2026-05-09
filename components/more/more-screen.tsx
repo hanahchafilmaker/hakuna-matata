@@ -1,7 +1,7 @@
-"use client";
+ï»¿"use client"
 
-import type { Task } from "@/components/tasks/task-card";
-import { TaskCard } from "@/components/tasks/task-card";
+import type { Task } from "@/components/tasks/task-card"
+import { TaskCard } from "@/components/tasks/task-card"
 
 export function MoreScreen({
   tasks,
@@ -10,23 +10,23 @@ export function MoreScreen({
   onToggle,
   onDelete,
 }: {
-  tasks: Task[];
-  routines: Task[];
-  onEdit: (task: Task) => void;
-  onToggle: (task: Task) => void;
-  onDelete: (id: string) => void;
+  tasks: Task[]
+  routines: Task[]
+  onEdit: (task: Task) => void
+  onToggle: (task: Task) => void
+  onDelete: (id: string) => void
 }) {
-  const activeTasks = tasks.filter((task) => !task.done).slice(0, 8);
-  const doneTasks = tasks.filter((task) => task.done).slice(0, 4);
-  const visibleRoutines = routines.slice(0, 6);
+  const activeTasks = tasks.filter((task) => !task.done).slice(0, 8)
+  const doneTasks = tasks.filter((task) => task.done).slice(0, 4)
+  const visibleRoutines = routines.slice(0, 6)
 
   return (
     <section className="more-screen">
       <div className="more-group card">
         <div className="more-group__head">
           <div>
-            <h3 className="more-group__title">?„ì²´ ????/h3>
-            <p className="more-group__desc">ì§€ê¸?ì§„í–‰ ì¤‘ì¸ ??ª©</p>
+            <h3 className="more-group__title">All tasks</h3>
+            <p className="more-group__desc">Currently active items</p>
           </div>
           <span className="more-group__count">{activeTasks.length}</span>
         </div>
@@ -43,7 +43,7 @@ export function MoreScreen({
               />
             ))
           ) : (
-            <div className="empty-inline">ì§„í–‰ ì¤‘ì¸ ???¼ì´ ?†ì–´.</div>
+            <div className="empty-inline">No active task.</div>
           )}
         </div>
       </div>
@@ -51,8 +51,8 @@ export function MoreScreen({
       <div className="more-group card">
         <div className="more-group__head">
           <div>
-            <h3 className="more-group__title">ë£¨í‹´</h3>
-            <p className="more-group__desc">ë°˜ë³µ?˜ëŠ” ?í™œ ??ª©</p>
+            <h3 className="more-group__title">Routines</h3>
+            <p className="more-group__desc">Repeated daily or weekly items</p>
           </div>
           <span className="more-group__count">{visibleRoutines.length}</span>
         </div>
@@ -69,7 +69,7 @@ export function MoreScreen({
               />
             ))
           ) : (
-            <div className="empty-inline">?±ë¡??ë£¨í‹´???†ì–´.</div>
+            <div className="empty-inline">No routine found.</div>
           )}
         </div>
       </div>
@@ -77,8 +77,8 @@ export function MoreScreen({
       <div className="more-group card">
         <div className="more-group__head">
           <div>
-            <h3 className="more-group__title">?„ë£Œ????/h3>
-            <p className="more-group__desc">ìµœê·¼ ì²´í¬????ª©</p>
+            <h3 className="more-group__title">Done</h3>
+            <p className="more-group__desc">Recently completed items</p>
           </div>
           <span className="more-group__count">{doneTasks.length}</span>
         </div>
@@ -95,10 +95,10 @@ export function MoreScreen({
               />
             ))
           ) : (
-            <div className="empty-inline">?„ì§ ?„ë£Œ????ª©???†ì–´.</div>
+            <div className="empty-inline">Nothing completed yet.</div>
           )}
         </div>
       </div>
     </section>
-  );
+  )
 }
