@@ -18,6 +18,7 @@ import type { Task } from "@/components/task-card";
 export default function Page() {
   const { tasks, addTask, updateTask, deleteTask, toggleTask } = useTasks();
   const { view, setView } = useAppView();
+
   const [modalOpen, setModalOpen] = useState(false);
   const [draft, setDraft] = useState<Partial<Task> | null>(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -34,18 +35,18 @@ export default function Page() {
       fri: 5,
       sat: 6,
     };
+
     return tasks.filter((task) => {
       const repeat = (task.repeat || "none").toLowerCase();
       if (repeat === "none") return false;
       if (repeat === "daily") return true;
+
       return repeat
         .split(",")
         .map((item) => item.trim())
         .some((item) => dayMap[item] === todayNum || item === todayNum.toString());
     });
   }, [tasks]);
-
-  const mainTasks = useMemo(() => tasks.filter((task) => !isRepeating(task.repeat)), [tasks]);
 
   function openAdd() {
     setDraft({
@@ -72,6 +73,7 @@ export default function Page() {
 
   async function handleSave(form: Partial<Task>) {
     if (!form.text?.trim()) return;
+
     setSaving(true);
     try {
       if (isEdit && form.id) {
@@ -97,11 +99,13 @@ export default function Page() {
 
   async function handleDelete(id: string) {
     if (!confirm("이 일정을 삭제할까요?")) return;
+
     try {
       await deleteTask(id);
     } catch (error) {
       console.error(error);
     }
+
     if (draft?.id === id) {
       setModalOpen(false);
     }
@@ -110,6 +114,7 @@ export default function Page() {
   return (
     <>
       <AppBackground />
+
       <AppShell>
         <div className="app-main">
           <TopHeader view={view} />
@@ -121,7 +126,6 @@ export default function Page() {
               onEdit={openEdit}
               onToggle={handleToggle}
               onDelete={handleDelete}
-              onAdd={openAdd}
             />
           )}
 
@@ -138,7 +142,6 @@ export default function Page() {
             <MoreScreen
               tasks={tasks}
               routines={routines}
-              showDone={false}
               onEdit={openEdit}
               onToggle={handleToggle}
               onDelete={handleDelete}
@@ -146,7 +149,7 @@ export default function Page() {
           )}
         </div>
 
-        <button type="button" className="fab" onClick={openAdd}>
+        <button type="button" className="fab" onClick={openAdd} aria-label="일정 추가">
           +
         </button>
 

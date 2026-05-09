@@ -1,93 +1,85 @@
 "use client";
 
-import { useMemo } from "react";
-import { CalendarDays, Flag, ListChecks } from "lucide-react";
-import { TaskCard, type Task } from "@/components/task-card";
-import { diffDays, getDdayLabel, parseLocalDate, todayStr } from "@/lib/dateUtils";
+import type { Task } from "@/components/task-card";
+import { TaskCard } from "@/components/task-card";
+import { todayStr } from "@/lib/dateUtils";
 
-type Props = {
+function formatDateKorean(date: string) {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return date;
+
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+
+  return `${year}년 ${month}월 ${day}일`;
+}
+
+function getDaysLeft(date: string) {
+  const today = new Date();
+  const target = new Date(date);
+
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
+}
+
+function DdayItem({ label, date }: { label: string; date: string }) {
+  const diff = getDaysLeft(date);
+  const display = diff === 0 ? "D-Day" : diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
+
+  return (
+    <div className="dday-strip__item">
+      <div>
+        <p className="dday-strip__label">{label}</p>
+        <p className="dday-strip__date">{formatDateKorean(date)}</p>
+      </div>
+      <strong className="dday-strip__value">{display}</strong>
+    </div>
+  );
+}
+
+export function HomeScreen({
+  tasks,
+  routines,
+  onEdit,
+  onToggle,
+  onDelete,
+}: {
   tasks: Task[];
   routines: Task[];
   onEdit: (task: Task) => void;
   onToggle: (task: Task) => void;
   onDelete: (id: string) => void;
-  onAdd: () => void;
-};
-
-export function HomeScreen({ tasks, routines, onEdit, onToggle, onDelete, onAdd }: Props) {
+}) {
   const today = todayStr();
-  const todayDate = parseLocalDate(today) ?? new Date();
 
-  const todayTasks = useMemo(
-    () =>
-      tasks
-        .filter((task) => task.date_start === today || task.occurrenceDate === today)
-        .sort((a, b) => (a.time || "").localeCompare(b.time || ""))
-        .slice(0, 5),
-    [tasks, today],
-  );
+  const todayTasks = tasks.filter((task) => !task.done && task.date_start === today).slice(0, 4);
 
-  const upcomingTasks = useMemo(
-    () =>
-      tasks
-        .filter((task) => task.date_start && task.date_start > today)
-        .sort((a, b) => a.date_start.localeCompare(b.date_start))
-        .slice(0, 4),
-    [tasks, today],
-  );
+  const upcomingTasks = tasks
+    .filter((task) => !task.done && task.date_start > today)
+    .sort((a, b) => a.date_start.localeCompare(b.date_start))
+    .slice(0, 4);
 
-  const ddayTasks = useMemo(
-    () =>
-      tasks
-        .filter((task) => task.date_start && task.date_start !== today)
-        .map((task) => ({
-          task,
-          diff: Math.abs(diffDays(todayDate, parseLocalDate(task.date_start) ?? todayDate)),
-        }))
-        .sort((a, b) => a.diff - b.diff)
-        .slice(0, 2)
-        .map((item) => item.task),
-    [tasks, today, todayDate],
-  );
-
-  const todoTasks = useMemo(
-    () =>
-      tasks
-        .filter((task) => !task.done)
-        .sort((a, b) => {
-          if (!a.date_start) return 1;
-          if (!b.date_start) return -1;
-          return a.date_start.localeCompare(b.date_start);
-        })
-        .slice(0, 4),
-    [tasks],
-  );
+  const visibleRoutines = routines.filter((task) => !task.done).slice(0, 3);
 
   return (
-    <div className="section-stack">
-      <section className="home-card card">
-        <div className="section-header">
-          <div>
-            <p className="section-label">오늘</p>
-            <h2 className="section-title">{today}</h2>
-          </div>
-          <button type="button" className="secondary-button" onClick={onAdd}>
-            + 추가
-          </button>
-        </div>
-      </section>
+    <section className="home-screen">
+      <div className="home-screen__hero card">
+        <p className="home-screen__hero-date">{formatDateKorean(today)}</p>
+        <h2 className="home-screen__hero-title">오늘 필요한 것만 보기</h2>
+        <p className="home-screen__hero-subtitle">해야 할 일과 가까운 일정만 가볍게 정리했어.</p>
+      </div>
 
-      <section className="home-card card">
-        <div className="section-header">
-          <div>
-            <p className="section-label">오늘 일정</p>
-            <p className="section-description">{todayTasks.length}개 진행 중</p>
-          </div>
-          <CalendarDays size={18} />
+      <section className="home-section">
+        <div className="section-head">
+          <h3 className="section-title">오늘 일정</h3>
+          <span className="section-badge">{todayTasks.length}개</span>
         </div>
 
         {todayTasks.length > 0 ? (
-          <div className="home-list">
+          <div className="section-stack">
             {todayTasks.map((task) => (
               <TaskCard
                 key={task.id}
@@ -95,26 +87,24 @@ export function HomeScreen({ tasks, routines, onEdit, onToggle, onDelete, onAdd 
                 onEdit={onEdit}
                 onToggle={onToggle}
                 onDelete={onDelete}
-                compact
               />
             ))}
           </div>
         ) : (
-          <div className="home-empty">오늘 일정이 없습니다. 빠르게 추가해보세요.</div>
+          <div className="empty-card card">
+            <p>오늘 일정은 비어 있어.</p>
+          </div>
         )}
       </section>
 
-      <section className="home-card card">
-        <div className="section-header">
-          <div>
-            <p className="section-label">가까운 일정</p>
-            <p className="section-description">다음 3개 일정만 표시</p>
-          </div>
-          <ListChecks size={18} />
+      <section className="home-section">
+        <div className="section-head">
+          <h3 className="section-title">가까운 일정</h3>
+          <span className="section-badge">최대 4개</span>
         </div>
 
         {upcomingTasks.length > 0 ? (
-          <div className="home-list">
+          <div className="section-stack">
             {upcomingTasks.map((task) => (
               <TaskCard
                 key={task.id}
@@ -122,63 +112,54 @@ export function HomeScreen({ tasks, routines, onEdit, onToggle, onDelete, onAdd 
                 onEdit={onEdit}
                 onToggle={onToggle}
                 onDelete={onDelete}
-                compact
               />
             ))}
           </div>
         ) : (
-          <div className="home-empty">등록된 다음 일정이 없습니다.</div>
+          <div className="empty-card card">
+            <p>다가오는 일정이 아직 없어.</p>
+          </div>
         )}
       </section>
 
-      <section className="home-card card">
-        <div className="section-header">
-          <div>
-            <p className="section-label">디데이</p>
-            <p className="section-description">가까운 디데이를 놓치지 마세요</p>
-          </div>
-          <Flag size={18} />
+      <section className="home-section">
+        <div className="section-head">
+          <h3 className="section-title">오늘 루틴</h3>
+          <span className="section-badge">{visibleRoutines.length}개</span>
         </div>
 
-        {ddayTasks.length > 0 ? (
-          <div className="home-dday-grid">
-            {ddayTasks.map((task) => (
-              <div key={task.id} className="dday-card">
-                <p className="dday-title">{task.text}</p>
-                <p className="dday-label">{getDdayLabel(task.date_start)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="home-empty">디데이가 없는 일정입니다.</div>
-        )}
-      </section>
-
-      <section className="home-card card">
-        <div className="section-header">
-          <div>
-            <p className="section-label">오늘 할 일</p>
-            <p className="section-description">미완료 항목을 먼저 보여줍니다</p>
-          </div>
-        </div>
-
-        {todoTasks.length > 0 ? (
-          <div className="home-list">
-            {todoTasks.map((task) => (
+        {visibleRoutines.length > 0 ? (
+          <div className="section-stack">
+            {visibleRoutines.map((task) => (
               <TaskCard
                 key={task.id}
                 task={task}
                 onEdit={onEdit}
                 onToggle={onToggle}
                 onDelete={onDelete}
-                compact
               />
             ))}
           </div>
         ) : (
-          <div className="home-empty">할 일이 없어요. 새로운 할 일을 추가해보세요.</div>
+          <div className="empty-card card">
+            <p>오늘 표시할 루틴이 없어.</p>
+          </div>
         )}
       </section>
-    </div>
+
+      <section className="home-section">
+        <div className="section-head">
+          <h3 className="section-title">디데이</h3>
+          <span className="section-badge">생활 기준점</span>
+        </div>
+
+        <div className="section-stack">
+          <div className="card dday-strip">
+            <DdayItem label="금연 시작" date="2026-01-01" />
+            <DdayItem label="우리 만난 날" date="2025-01-01" />
+          </div>
+        </div>
+      </section>
+    </section>
   );
 }
