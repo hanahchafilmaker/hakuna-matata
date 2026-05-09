@@ -621,3 +621,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* ================= FORM FIX ================= */
+
+.form-grid-two,
+.form-grid.two,
+.date-grid,
+.date-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.form-grid-two > *,
+.form-grid.two > *,
+.date-grid > *,
+.date-row > * {
+  min-width: 0;
+}
+
+.form-field {
+  min-width: 0;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 390px) {
+  .form-grid-two,
+  .form-grid.two,
+  .date-grid,
+  .date-row {
+    grid-template-columns: 1fr;
+  }
+}

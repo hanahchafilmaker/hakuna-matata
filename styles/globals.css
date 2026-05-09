@@ -1,221 +1,325 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
-/* 폰트 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap");
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 
-@custom-variant dark (&:is(.dark *));
+/* ================= ROOT ================= */
 
 :root {
+  --background: #070b14;
+  --foreground: #eef5ff;
 
-  /* 기본 색상 */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.17 0 0);
+  --card: rgba(255, 255, 255, 0.06);
+  --card-foreground: #eef5ff;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0 0);
+  --popover: rgba(255, 255, 255, 0.08);
+  --popover-foreground: #eef5ff;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0 0);
+  --primary: #eef5ff;
+  --primary-foreground: #070b14;
 
-  --primary: oklch(0.22 0 0);
-  --primary-foreground: oklch(0.98 0 0);
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #eef5ff;
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.22 0 0);
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #9aa6c2;
 
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.55 0 0);
+  --accent: rgba(255, 255, 255, 0.08);
+  --accent-foreground: #eef5ff;
 
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.22 0 0);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 
-  --destructive: oklch(0.58 0.23 27);
-  --destructive-foreground: oklch(0.98 0 0);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: rgba(255, 255, 255, 0.14);
 
-  --border: oklch(0.91 0 0);
-  --input: oklch(0.91 0 0);
-  --ring: oklch(0.72 0 0);
+  --radius-card: 20px;
+  --radius-input: 18px;
+  --radius-small: 14px;
+  --radius-pill: 999px;
 
-  /* 차트 컬러 (선명하지만 과하지 않게) */
-  --chart-1: oklch(0.62 0.19 41);
-  --chart-2: oklch(0.62 0.12 210);
-  --chart-3: oklch(0.45 0.08 250);
-  --chart-4: oklch(0.82 0.16 85);
-  --chart-5: oklch(0.74 0.17 70);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.22);
 
-  --radius: 0.5rem;
-
-  /* 사이드바 */
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.17 0 0);
-
-  --sidebar-primary: oklch(0.22 0 0);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.22 0 0);
-
-  --sidebar-border: oklch(0.91 0 0);
-  --sidebar-ring: oklch(0.72 0 0);
-}
-
-.dark {
-
-  --background: oklch(0.16 0 0);
-  --foreground: oklch(0.96 0 0);
-
-  --card: oklch(0.16 0 0);
-  --card-foreground: oklch(0.96 0 0);
-
-  --popover: oklch(0.16 0 0);
-  --popover-foreground: oklch(0.96 0 0);
-
-  --primary: oklch(0.96 0 0);
-  --primary-foreground: oklch(0.22 0 0);
-
-  --secondary: oklch(0.26 0 0);
-  --secondary-foreground: oklch(0.96 0 0);
-
-  --muted: oklch(0.26 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-
-  --accent: oklch(0.26 0 0);
-  --accent-foreground: oklch(0.96 0 0);
-
-  --destructive: oklch(0.4 0.14 25);
-  --destructive-foreground: oklch(0.64 0.22 25);
-
-  --border: oklch(0.26 0 0);
-  --input: oklch(0.26 0 0);
-  --ring: oklch(0.45 0 0);
-
-  --chart-1: oklch(0.52 0.23 264);
-  --chart-2: oklch(0.69 0.16 160);
-  --chart-3: oklch(0.74 0.17 70);
-  --chart-4: oklch(0.63 0.24 300);
-  --chart-5: oklch(0.64 0.23 16);
-
-  --sidebar: oklch(0.22 0 0);
-  --sidebar-foreground: oklch(0.96 0 0);
-
-  --sidebar-primary: oklch(0.52 0.23 264);
-  --sidebar-primary-foreground: oklch(0.96 0 0);
-
-  --sidebar-accent: oklch(0.26 0 0);
-  --sidebar-accent-foreground: oklch(0.96 0 0);
-
-  --sidebar-border: oklch(0.26 0 0);
-  --sidebar-ring: oklch(0.45 0 0);
-}
-
-@theme inline {
-
-  /* 선명하고 얇은 폰트 */
   --font-sans:
-    'Inter',
-    'Pretendard',
-    'Noto Sans KR',
-    system-ui,
-    -apple-system,
-    sans-serif;
-
-  --font-mono:
-    'Geist Mono',
-    ui-monospace,
-    monospace;
-
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+    "Inter", "Pretendard", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-@layer base {
+/* ================= RESET ================= */
 
-  * {
-    @apply border-border;
+* {
+  box-sizing: border-box;
+  text-shadow: none;
+}
+
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top, rgba(126, 168, 255, 0.12), transparent 35%),
+    linear-gradient(180deg, #070b14 0%, #070b14 100%);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ================= TYPOGRAPHY ================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+b {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+}
+
+/* ================= FORM ================= */
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  outline: none;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ================= SELECTION ================= */
+
+::selection {
+  background: rgba(126, 168, 255, 0.2);
+  color: #ffffff;
+}
+
+/* ================= SCROLL ================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ================= LAYOUT ================= */
+
+.app-shell {
+  min-height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  padding: 14px 14px 110px;
+  overflow-y: auto;
+}
+
+/* ================= CARD ================= */
+
+.card {
+  border-radius: var(--radius-card);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+/* ================= INPUT ================= */
+
+input,
+textarea,
+select {
+  width: 100%;
+  min-width: 0;
+
+  border-radius: var(--radius-input);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: var(--foreground);
+
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+input,
+select {
+  height: 56px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+
+textarea {
+  padding: 14px 16px;
+  min-height: 120px;
+  resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.34);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ================= FORM GRID ================= */
+
+.form-grid-two,
+.form-grid.two,
+.date-grid,
+.date-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.form-grid-two > *,
+.form-grid.two > *,
+.date-grid > *,
+.date-row > * {
+  min-width: 0;
+}
+
+.form-field {
+  min-width: 0;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 390px) {
+  .form-grid-two,
+  .form-grid.two,
+  .date-grid,
+  .date-row {
+    grid-template-columns: 1fr;
   }
+}
 
-  body {
-    @apply bg-background text-foreground font-sans;
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-  }
+/* ================= BUTTON ================= */
 
-  /* bold 느낌 제거 */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-weight: 500;
-    letter-spacing: -0.01em;
-  }
+button {
+  border: 0;
+  cursor: pointer;
+}
 
-  strong {
-    font-weight: 500;
-  }
+.primary-btn {
+  height: 54px;
 
-  b {
-    font-weight: 500;
-  }
+  border-radius: 18px;
 
-  /* glow 제거 */
-  * {
-    text-shadow: none;
-    box-shadow: none;
-    filter: none;
-  }
+  background: rgba(255, 255, 255, 0.1);
 
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.primary-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ================= FAB ================= */
+
+.fab {
+  position: fixed;
+
+  right: max(20px, calc((100vw - 430px) / 2 + 20px));
+  bottom: 88px;
+
+  width: 58px;
+  height: 58px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+
+  font-size: 30px;
+  font-weight: 200;
+
+  backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  z-index: 40;
+}
+
+/* ================= SECTION ================= */
+
+.section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ================= EMPTY ================= */
+
+.empty-card {
+  padding: 18px;
+}
+
+.empty-card p {
+  color: var(--muted-foreground);
+  font-size: 13px;
 }
