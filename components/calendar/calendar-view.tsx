@@ -7,8 +7,8 @@ import interactionPlugin from "@fullcalendar/interaction";
 import koLocale from "@fullcalendar/core/locales/ko";
 import type { DateClickArg } from "@fullcalendar/interaction";
 import type { EventClickArg, EventContentArg } from "@fullcalendar/core";
-import type { Task } from "@/components/task-card";
-import { TaskCard } from "@/components/task-card";
+import type { Task } from "@/components/tasks/task-card";
+import { TaskCard } from "@/components/tasks/task-card";
 import { fmtDate } from "@/lib/dateUtils";
 
 type Props = {
@@ -44,17 +44,17 @@ function formatSelectedDate(dateStr: string) {
   if (!year || !month || !day) return dateStr;
 
   const d = new Date(year, month - 1, day);
-  const week = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${year}년 ${month}월 ${day}일 ${week[d.getDay()]}요일`;
+  const week = ["??, "??, "??, "??, "�?, "�?, "??];
+  return `${year}??${month}??${day}??${week[d.getDay()]}?�일`;
 }
 
 function getTaskTypeLabel(task: Task) {
   if (task.repeat && task.repeat !== "none") return "루틴";
   if (task.type === "meeting") return "미팅";
-  if (task.type === "work") return "업무";
-  if (task.type === "life") return "생활";
-  if (task.type === "ui") return "일정";
-  return "일정";
+  if (task.type === "work") return "?�무";
+  if (task.type === "life") return "?�활";
+  if (task.type === "ui") return "?�정";
+  return "?�정";
 }
 
 export function CalendarView({ tasks, onEdit, onToggle, onDelete }: Props) {
@@ -68,7 +68,7 @@ export function CalendarView({ tasks, onEdit, onToggle, onDelete }: Props) {
 
       return {
         id: task.id,
-        title: task.text || "제목 없음",
+        title: task.text || "?�목 ?�음",
         start,
         end:
           end && end !== start
@@ -132,11 +132,11 @@ export function CalendarView({ tasks, onEdit, onToggle, onDelete }: Props) {
         <div className="calendar-topbar">
           <div>
             <p className="calendar-topbar__eyebrow">Monthly View</p>
-            <h2 className="calendar-topbar__title">한눈에 보는 일정</h2>
+            <h2 className="calendar-topbar__title">?�눈??보는 ?�정</h2>
           </div>
 
           <button type="button" className="calendar-today-btn" onClick={goToday}>
-            오늘
+            ?�늘
           </button>
         </div>
 
@@ -162,7 +162,7 @@ export function CalendarView({ tasks, onEdit, onToggle, onDelete }: Props) {
           dayHeaderFormat={{ weekday: "short" }}
           titleFormat={{ year: "numeric", month: "long" }}
           buttonText={{
-            today: "오늘",
+            today: "?�늘",
           }}
         />
       </div>
@@ -197,7 +197,7 @@ export function CalendarView({ tasks, onEdit, onToggle, onDelete }: Props) {
           </div>
         ) : (
           <div className="empty-card card calendar-empty">
-            <p>선택한 날짜에 일정이 없어.</p>
+            <p>?�택???�짜???�정???�어.</p>
           </div>
         )}
       </section>

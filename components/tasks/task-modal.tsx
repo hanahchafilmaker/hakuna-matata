@@ -10,7 +10,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react'
-import type { Task } from '@/components/task-card'
+import type { Task } from '@/components/tasks/task-card'
 import { parseTime } from '@/lib/dateUtils'
 import { DayCode, DAY_LABELS, parseRepeat, serializeRepeat } from '@/lib/repeatUtils'
 
@@ -22,12 +22,12 @@ type Props = {
   isEditMode?: boolean
 }
 
-const ASSIGNEES: Task['assignee'][] = ['하나', '민효', '함께', '데이트']
+const ASSIGNEES: Task['assignee'][] = ['?�나', '민효', '?�께', '?�이??]
 const TYPES: { value: Task['type']; label: string }[] = [
   { value: 'ui',   label: '중요·긴급' },
   { value: 'nui',  label: '중요' },
   { value: 'uni',  label: '긴급' },
-  { value: 'nuni', label: '일반' },
+  { value: 'nuni', label: '?�반' },
 ]
 
 const DAY_ORDER: DayCode[] = ['mon','tue','wed','thu','fri','sat','sun']
@@ -37,7 +37,7 @@ function normalizeTask(task?: Partial<Task> | null): Partial<Task> & { _hasTime:
   return {
     id:         task?.id         || '',
     text:       task?.text       || '',
-    assignee:   (task?.assignee as Task['assignee']) || '하나',
+    assignee:   (task?.assignee as Task['assignee']) || '?�나',
     type:       task?.type       || 'ui',
     date_start: task?.date_start || '',
     date_end:   task?.date_end   || task?.date_start || '',
@@ -62,7 +62,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
   const norm = normalizeTask(task)
   const [form, setForm]         = useState<Partial<Task>>(norm)
   const [hasTime, setHasTime]   = useState(norm._hasTime)
-  // 반복 요일 멀티 선택
+  // 반복 ?�일 멀???�택
   const [repeatDays, setRepeatDays] = useState<DayCode[]>(() => parseRepeat(norm.repeat))
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -91,7 +91,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.text?.trim()) { alert('일정 제목을 입력해주세요.'); return }
+    if (!form.text?.trim()) { alert('?�정 ?�목???�력?�주?�요.'); return }
 
     const payload: Partial<Task> = {
       ...form,
@@ -126,17 +126,17 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
           boxShadow: '0 24px 50px rgba(0,0,0,0.45)',
         }}
       >
-        {/* 헤더 */}
+        {/* ?�더 */}
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>
-              {isEditMode ? '일정 수정' : '새 일정 추가'}
+              {isEditMode ? '?�정 ?�정' : '???�정 추�?'}
             </div>
             <div style={{ marginTop: 4, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
-              필요한 정보만 가볍게 입력해도 돼요
+              ?�요???�보�?가볍게 ?�력?�도 ?�요
             </div>
           </div>
-          <button type="button" onClick={onClose} style={iconBtnStyle} title="닫기">
+          <button type="button" onClick={onClose} style={iconBtnStyle} title="?�기">
             <X size={16} />
           </button>
         </div>
@@ -144,28 +144,28 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
         <form onSubmit={handleSubmit}>
           <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-            {/* 제목 */}
+            {/* ?�목 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <FieldLabel>일정 제목</FieldLabel>
+              <FieldLabel>?�정 ?�목</FieldLabel>
               <textarea
                 value={form.text || ''}
                 onChange={(e) => updateField('text', e.target.value)}
                 rows={3}
-                placeholder="예: 병원 예약, 기획안 마감, 가족 외식"
+                placeholder="?? 병원 ?�약, 기획??마감, 가�??�식"
                 style={textareaStyle}
               />
             </div>
 
-            {/* 담당자 + 우선순위 */}
+            {/* ?�당??+ ?�선?�위 */}
             <div style={grid2}>
-              <FieldBlock icon={<UserRound size={13} />} label="담당자">
-                <select value={form.assignee || '하나'} onChange={(e) => updateField('assignee', e.target.value)} style={selectStyle}>
+              <FieldBlock icon={<UserRound size={13} />} label="?�당??>
+                <select value={form.assignee || '?�나'} onChange={(e) => updateField('assignee', e.target.value)} style={selectStyle}>
                   {ASSIGNEES.map((name) => (
                     <option key={name} value={name} style={{ color: '#111' }}>{name}</option>
                   ))}
                 </select>
               </FieldBlock>
-              <FieldBlock icon={<LayoutGrid size={13} />} label="우선순위">
+              <FieldBlock icon={<LayoutGrid size={13} />} label="?�선?�위">
                 <select value={form.type || 'ui'} onChange={(e) => updateField('type', e.target.value as Task['type'])} style={selectStyle}>
                   {TYPES.map((t) => (
                     <option key={t.value} value={t.value} style={{ color: '#111' }}>{t.label}</option>
@@ -174,27 +174,27 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
               </FieldBlock>
             </div>
 
-            {/* 우선순위 프리뷰 */}
+            {/* ?�선?�위 ?�리�?*/}
             <div style={{ padding: '10px 12px', borderRadius: 14, background: typePreview.bg, border: '1px solid rgba(255,255,255,0.06)', color: typePreview.color, fontSize: 12, fontWeight: 700 }}>
-              현재 선택: {TYPES.find((t) => t.value === form.type)?.label || '일반'}
+              ?�재 ?�택: {TYPES.find((t) => t.value === form.type)?.label || '?�반'}
             </div>
 
-            {/* 시작일 + 종료일 */}
+            {/* ?�작??+ 종료??*/}
             <div style={grid2}>
-              <FieldBlock icon={<CalendarDays size={13} />} label="시작일">
+              <FieldBlock icon={<CalendarDays size={13} />} label="?�작??>
                 <input type="date" value={form.date_start || ''} onChange={(e) => {
                   const v = e.target.value
                   updateField('date_start', v)
                   if (!form.date_end) updateField('date_end', v)
                 }} style={inputStyle} />
               </FieldBlock>
-              <FieldBlock icon={<CalendarDays size={13} />} label="종료일">
+              <FieldBlock icon={<CalendarDays size={13} />} label="종료??>
                 <input type="date" value={form.date_end || ''} onChange={(e) => updateField('date_end', e.target.value)} style={inputStyle} />
               </FieldBlock>
             </div>
 
-            {/* 시간 (토글 포함) */}
-            <FieldBlock icon={<Clock3 size={13} />} label="시간">
+            {/* ?�간 (?��? ?�함) */}
+            <FieldBlock icon={<Clock3 size={13} />} label="?�간">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                   <div
@@ -214,7 +214,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                     }} />
                   </div>
                   <span style={{ fontSize: 11, color: hasTime ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 600 }}>
-                    {hasTime ? '시간 있음' : '시간 없음'}
+                    {hasTime ? '?�간 ?�음' : '?�간 ?�음'}
                   </span>
                 </label>
                 {hasTime && (
@@ -222,20 +222,20 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                     type="text"
                     value={form.time || ''}
                     onChange={(e) => updateField('time', e.target.value)}
-                    placeholder="예: 14:00"
+                    placeholder="?? 14:00"
                     style={inputStyle}
                   />
                 )}
               </div>
             </FieldBlock>
 
-            {/* 장소 */}
-            <FieldBlock icon={<MapPin size={13} />} label="장소">
-              <input type="text" value={form.location || ''} onChange={(e) => updateField('location', e.target.value)} placeholder="예: 송도 / 병원 / 집" style={inputStyle} />
+            {/* ?�소 */}
+            <FieldBlock icon={<MapPin size={13} />} label="?�소">
+              <input type="text" value={form.location || ''} onChange={(e) => updateField('location', e.target.value)} placeholder="?? ?�도 / 병원 / �? style={inputStyle} />
             </FieldBlock>
 
-            {/* 반복 요일 멀티 선택 */}
-            <FieldBlock icon={<Repeat size={13} />} label="반복 요일 (루틴)">
+            {/* 반복 ?�일 멀???�택 */}
+            <FieldBlock icon={<Repeat size={13} />} label="반복 ?�일 (루틴)">
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {DAY_ORDER.map((day) => {
                   const active = repeatDays.includes(day)
@@ -268,8 +268,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                       color: 'rgba(255,120,120,0.8)', cursor: 'pointer',
                     }}
                   >
-                    초기화
-                  </button>
+                    초기??                  </button>
                 )}
               </div>
               {repeatDays.length > 0 && (
@@ -279,7 +278,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
               )}
             </FieldBlock>
 
-            {/* 완료 체크 */}
+            {/* ?�료 체크 */}
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 12px', borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
               <input
                 type="checkbox"
@@ -288,17 +287,17 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                 style={{ width: 16, height: 16, accentColor: '#d4af37' }}
               />
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>완료 상태로 저장</div>
-                <div style={{ marginTop: 2, fontSize: 10, color: 'rgba(255,255,255,0.42)' }}>이미 끝난 일정이면 체크해두면 돼요</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>?�료 ?�태�??�??/div>
+                <div style={{ marginTop: 2, fontSize: 10, color: 'rgba(255,255,255,0.42)' }}>?��? ?�난 ?�정?�면 체크?�두�??�요</div>
               </div>
             </label>
           </div>
 
-          {/* 저장 버튼 */}
+          {/* ?�??버튼 */}
           <div style={{ padding: '12px 16px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8 }}>
             <button type="button" onClick={onClose} style={secondaryBtnStyle}>취소</button>
             <button type="submit" disabled={isSubmitting} style={{ ...primaryBtnStyle, opacity: isSubmitting ? 0.6 : 1, cursor: isSubmitting ? 'default' : 'pointer' }}>
-              {isSubmitting ? '저장 중...' : isEditMode ? '수정 완료' : '일정 저장'}
+              {isSubmitting ? '?�??�?..' : isEditMode ? '?�정 ?�료' : '?�정 ?�??}
             </button>
           </div>
         </form>

@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
@@ -7,13 +7,13 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { HomeScreen } from "@/components/home/home-screen";
 import { MoreScreen } from "@/components/more/more-screen";
 import { AppBackground } from "@/components/background/app-background";
-import { CalendarView } from "@/components/calendar-view";
-import { TaskModal } from "@/components/task-modal";
+import { CalendarView } from "@/components/calendar/calendar-view";
+import { TaskModal } from "@/components/tasks/task-modal";
 import { useAppView } from "@/hooks/use-app-view";
 import { useTasks } from "@/hooks/use-tasks";
 import { todayStr } from "@/lib/dateUtils";
 import { isRepeating } from "@/lib/repeatUtils";
-import type { Task } from "@/components/task-card";
+import type { Task } from "@/components/tasks/task-card";
 
 export default function Page() {
   const { tasks, addTask, updateTask, deleteTask, toggleTask } = useTasks();
@@ -52,7 +52,7 @@ export default function Page() {
     setDraft({
       date_start: todayStr(),
       date_end: todayStr(),
-      assignee: "í•˜ë‚˜",
+      assignee: "ÇÏ³ª",
       type: "ui",
       repeat: "none",
       done: false,
@@ -83,7 +83,7 @@ export default function Page() {
       }
       setModalOpen(false);
     } catch (error) {
-      console.error("ì €ì¥ ì¤‘ ì˜¤ë¥˜", error);
+      console.error("ÀúÀå Áß ¿À·ù", error);
     } finally {
       setSaving(false);
     }
@@ -98,7 +98,7 @@ export default function Page() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("ì´ ì¼ì •ì„ ì‚­ì œí• ê¹Œìš”?")) return;
+    if (!confirm("ÀÌ ÀÏÁ¤À» »èÁ¦ÇÒ±î¿ä?")) return;
 
     try {
       await deleteTask(id);
@@ -149,7 +149,7 @@ export default function Page() {
           )}
         </div>
 
-        <button type="button" className="fab" onClick={openAdd} aria-label="ì¼ì • ì¶”ê°€">
+        <button type="button" className="fab" onClick={openAdd} aria-label="ÀÏÁ¤ Ãß°¡">
           +
         </button>
 

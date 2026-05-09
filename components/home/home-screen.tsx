@@ -1,13 +1,13 @@
 "use client";
 
-import type { Task } from "@/components/task-card";
-import { TaskCard } from "@/components/task-card";
+import type { Task } from "@/components/tasks/task-card";
+import { TaskCard } from "@/components/tasks/task-card";
 import { todayStr } from "@/lib/dateUtils";
 
 function formatDateKorean(date: string) {
   const [year, month, day] = date.split("-").map(Number);
   if (!year || !month || !day) return date;
-  return `${year}년 ${month}월 ${day}일`;
+  return `${year}??${month}??${day}??;
 }
 
 function parseLocalDate(dateStr: string) {
@@ -66,14 +66,14 @@ export function HomeScreen({
     <section className="home-screen">
       <div className="home-screen__hero card">
         <p className="home-screen__hero-date">{formatDateKorean(today)}</p>
-        <h2 className="home-screen__hero-title">오늘 필요한 것만 보기</h2>
-        <p className="home-screen__hero-subtitle">해야 할 일과 가까운 일정만 가볍게 정리했어.</p>
+        <h2 className="home-screen__hero-title">?�늘 ?�요??것만 보기</h2>
+        <p className="home-screen__hero-subtitle">?�야 ???�과 가까운 ?�정�?가볍게 ?�리?�어.</p>
       </div>
 
       <section className="home-section">
         <div className="section-head">
-          <h3 className="section-title">오늘 일정</h3>
-          <span className="section-badge">{todayTasks.length}개</span>
+          <h3 className="section-title">?�늘 ?�정</h3>
+          <span className="section-badge">{todayTasks.length}�?/span>
         </div>
 
         {todayTasks.length > 0 ? (
@@ -90,15 +90,15 @@ export function HomeScreen({
           </div>
         ) : (
           <div className="empty-card card">
-            <p>오늘 일정은 비어 있어.</p>
+            <p>?�늘 ?�정?� 비어 ?�어.</p>
           </div>
         )}
       </section>
 
       <section className="home-section">
         <div className="section-head">
-          <h3 className="section-title">가까운 일정</h3>
-          <span className="section-badge">최대 4개</span>
+          <h3 className="section-title">가까운 ?�정</h3>
+          <span className="section-badge">최�? 4�?/span>
         </div>
 
         {upcomingTasks.length > 0 ? (
@@ -115,15 +115,15 @@ export function HomeScreen({
           </div>
         ) : (
           <div className="empty-card card">
-            <p>다가오는 일정이 아직 없어.</p>
+            <p>?��??�는 ?�정???�직 ?�어.</p>
           </div>
         )}
       </section>
 
       <section className="home-section">
         <div className="section-head">
-          <h3 className="section-title">오늘 루틴</h3>
-          <span className="section-badge">{visibleRoutines.length}개</span>
+          <h3 className="section-title">?�늘 루틴</h3>
+          <span className="section-badge">{visibleRoutines.length}�?/span>
         </div>
 
         {visibleRoutines.length > 0 ? (
@@ -140,21 +140,21 @@ export function HomeScreen({
           </div>
         ) : (
           <div className="empty-card card">
-            <p>오늘 표시할 루틴이 없어.</p>
+            <p>?�늘 ?�시??루틴???�어.</p>
           </div>
         )}
       </section>
 
       <section className="home-section">
         <div className="section-head">
-          <h3 className="section-title">디데이</h3>
-          <span className="section-badge">생활 기준점</span>
+          <h3 className="section-title">?�데??/h3>
+          <span className="section-badge">?�활 기�???/span>
         </div>
 
         <div className="section-stack">
           <div className="card dday-strip">
-            <DdayItem label="금연 시작" date="2024-11-23" />
-            <DdayItem label="우리 만난 날" date="2024-06-30" />
+            <DdayItem label="금연 ?�작" date="2024-11-23" />
+            <DdayItem label="?�리 만난 ?? date="2024-06-30" />
           </div>
         </div>
       </section>

@@ -1,7 +1,7 @@
 "use client";
 
-import type { Task } from "@/components/task-card";
-import { TaskCard } from "@/components/task-card";
+import type { Task } from "@/components/tasks/task-card";
+import { TaskCard } from "@/components/tasks/task-card";
 
 export function MoreScreen({
   tasks,
@@ -25,8 +25,8 @@ export function MoreScreen({
       <div className="more-group card">
         <div className="more-group__head">
           <div>
-            <h3 className="more-group__title">전체 할 일</h3>
-            <p className="more-group__desc">지금 진행 중인 항목</p>
+            <h3 className="more-group__title">?�체 ????/h3>
+            <p className="more-group__desc">지�?진행 중인 ??��</p>
           </div>
           <span className="more-group__count">{activeTasks.length}</span>
         </div>
@@ -43,7 +43,7 @@ export function MoreScreen({
               />
             ))
           ) : (
-            <div className="empty-inline">진행 중인 할 일이 없어.</div>
+            <div className="empty-inline">진행 중인 ???�이 ?�어.</div>
           )}
         </div>
       </div>
@@ -52,7 +52,7 @@ export function MoreScreen({
         <div className="more-group__head">
           <div>
             <h3 className="more-group__title">루틴</h3>
-            <p className="more-group__desc">반복되는 생활 항목</p>
+            <p className="more-group__desc">반복?�는 ?�활 ??��</p>
           </div>
           <span className="more-group__count">{visibleRoutines.length}</span>
         </div>
@@ -69,7 +69,7 @@ export function MoreScreen({
               />
             ))
           ) : (
-            <div className="empty-inline">등록된 루틴이 없어.</div>
+            <div className="empty-inline">?�록??루틴???�어.</div>
           )}
         </div>
       </div>
@@ -77,8 +77,8 @@ export function MoreScreen({
       <div className="more-group card">
         <div className="more-group__head">
           <div>
-            <h3 className="more-group__title">완료한 일</h3>
-            <p className="more-group__desc">최근 체크한 항목</p>
+            <h3 className="more-group__title">?�료????/h3>
+            <p className="more-group__desc">최근 체크????��</p>
           </div>
           <span className="more-group__count">{doneTasks.length}</span>
         </div>
@@ -95,7 +95,7 @@ export function MoreScreen({
               />
             ))
           ) : (
-            <div className="empty-inline">아직 완료한 항목이 없어.</div>
+            <div className="empty-inline">?�직 ?�료????��???�어.</div>
           )}
         </div>
       </div>
