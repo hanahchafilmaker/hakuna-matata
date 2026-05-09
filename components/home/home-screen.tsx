@@ -5,24 +5,22 @@ import { TaskCard } from "@/components/task-card";
 import { todayStr } from "@/lib/dateUtils";
 
 function formatDateKorean(date: string) {
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day) return date;
   return `${year}년 ${month}월 ${day}일`;
+}
+
+function parseLocalDate(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function getDaysLeft(date: string) {
   const today = new Date();
-  const target = new Date(date);
+  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const target = parseLocalDate(date);
 
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-
-  return Math.round((target.getTime() - today.getTime()) / 86400000);
+  return Math.round((target.getTime() - base.getTime()) / 86400000);
 }
 
 function DdayItem({ label, date }: { label: string; date: string }) {
@@ -155,8 +153,8 @@ export function HomeScreen({
 
         <div className="section-stack">
           <div className="card dday-strip">
-            <DdayItem label="금연 시작" date="2026-01-01" />
-            <DdayItem label="우리 만난 날" date="2025-01-01" />
+            <DdayItem label="금연 시작" date="2024-11-23" />
+            <DdayItem label="우리 만난 날" date="2024-06-30" />
           </div>
         </div>
       </section>

@@ -1,327 +1,205 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
 import koLocale from "@fullcalendar/core/locales/ko";
-import type { EventInput } from "@fullcalendar/core";
+import type { DateClickArg } from "@fullcalendar/interaction";
+import type { EventClickArg, EventContentArg } from "@fullcalendar/core";
 import type { Task } from "@/components/task-card";
-import { ChevronLeft, ChevronRight, Calendar, List } from "lucide-react";
+import { TaskCard } from "@/components/task-card";
+import { fmtDate } from "@/lib/dateUtils";
 
 type Props = {
-  tasks?: Task[];
-  onEdit?: (task: Task) => void;
-  onToggle?: (task: Task) => void;
-  onDelete?: (id: string) => void;
-};
-
-type SheetTask = {
-  id?: string;
-  date_start?: string;
-  date_end?: string;
-  assignee?: string;
-  text?: string;
-  location?: string;
-  time?: string;
-  type?: string;
-  repeat?: string;
-  done?: boolean;
-};
-
-const ASSIGNEE_COLOR: Record<string, string> = {
-  하나: "#89a35c",
-  민효: "#4d8df7",
-  함께: "#b232d6",
-  데이트: "#f08a24",
+  tasks: Task[];
+  onEdit: (task: Task) => void;
+  onToggle: (task: Task) => void;
+  onDelete: (id: string) => void;
 };
 
 function toDateOnly(value?: string) {
   if (!value) return "";
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-
-  return `${yyyy}-${mm}-${dd}`;
+  return value.slice(0, 10);
 }
 
-function addOneDay(dateStr: string) {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + 1);
-
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-
-  return `${yyyy}-${mm}-${dd}`;
+function isSameDate(a?: string, b?: string) {
+  return toDateOnly(a) === toDateOnly(b);
 }
 
-function parseTimeLabel(value?: string) {
-  if (!value) return "";
-
-  const d = new Date(value);
-  if (!Number.isNaN(d.getTime())) {
-    const hh = d.getHours();
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    const ampm = hh < 12 ? "오전" : "오후";
-    const h12 = hh % 12 || 12;
-    return `${ampm} ${h12}:${mm}`;
-  }
-
-  return value;
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function sheetTaskToEvent(task: SheetTask): EventInput | null {
-  const start = toDateOnly(task.date_start);
-  if (!start) return null;
-
-  const endRaw = toDateOnly(task.date_end || task.date_start);
-  const isMulti = endRaw && endRaw !== start;
-  const title = task.text || "일정";
-
-  const color = ASSIGNEE_COLOR[task.assignee || ""] || "#6d8fd8";
-
-  return {
-    id: task.id || `${start}-${title}`,
-    title,
-    start,
-    end: isMulti ? addOneDay(endRaw) : undefined,
-    allDay: true,
-    display: "block",
-    backgroundColor: isMulti ? color : "transparent",
-    borderColor: isMulti ? color : "transparent",
-    textColor: isMulti ? "#ffffff" : color,
-    classNames: isMulti ? ["multi-day-event"] : ["single-day-event"],
-    extendedProps: {
-      raw: task,
-      isMultiDay: isMulti,
-      eventColor: color,
-    },
-  };
+function parseLocalDate(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
-async function fetchHolidays(year: number): Promise<EventInput[]> {
-  try {
-    const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/KR`);
-    if (!res.ok) return [];
+function formatSelectedDate(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  if (!year || !month || !day) return dateStr;
 
-    const data = await res.json();
-
-    return data.map((h: any) => ({
-      id: `holiday-${h.date}`,
-      title: h.localName,
-      start: h.date,
-      allDay: true,
-      classNames: ["holiday-event"],
-      backgroundColor: "transparent",
-      borderColor: "transparent",
-      textColor: "#ef4444",
-      extendedProps: {
-        isHoliday: true,
-      },
-    }));
-  } catch {
-    return [];
-  }
+  const d = new Date(year, month - 1, day);
+  const week = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${year}년 ${month}월 ${day}일 ${week[d.getDay()]}요일`;
 }
 
-export function CalendarView({ tasks = [], onEdit }: Props) {
-  const calendarRef = useRef<any>(null);
-  const [sheetTasks, setSheetTasks] = useState<SheetTask[]>([]);
-  const [holidays, setHolidays] = useState<EventInput[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentTitle, setCurrentTitle] = useState("");
-  const [currentView, setCurrentView] = useState<"month" | "list">("month");
+function getTaskTypeLabel(task: Task) {
+  if (task.repeat && task.repeat !== "none") return "루틴";
+  if (task.type === "meeting") return "미팅";
+  if (task.type === "work") return "업무";
+  if (task.type === "life") return "생활";
+  if (task.type === "ui") return "일정";
+  return "일정";
+}
 
-  useEffect(() => {
-    async function loadTasks() {
-      try {
-        setLoading(true);
-
-        // Use server-side API route to avoid CORS issues
-        const res = await fetch("/api/tasks");
-        const json = await res.json();
-
-        const rows = Array.isArray(json) ? json : Array.isArray(json.data) ? json.data : [];
-
-        setSheetTasks(rows);
-      } catch (err) {
-        console.error("일정 불러오기 실패:", err);
-        setSheetTasks([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadTasks();
-  }, []);
-
-  useEffect(() => {
-    async function loadHolidayEvents() {
-      const currentYear = new Date().getFullYear();
-      const result = await Promise.all([
-        fetchHolidays(currentYear - 1),
-        fetchHolidays(currentYear),
-        fetchHolidays(currentYear + 1),
-      ]);
-
-      setHolidays(result.flat());
-    }
-
-    loadHolidayEvents();
-  }, []);
+export function CalendarView({ tasks, onEdit, onToggle, onDelete }: Props) {
+  const calendarRef = useRef<FullCalendar | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(() => getLocalDateString());
 
   const events = useMemo(() => {
-    // sheetTasks 로딩 완료 시 sheetTasks 우선 사용 (tasks props와 중복 방지)
-    const sourceItems: SheetTask[] =
-      sheetTasks.length > 0
-        ? sheetTasks
-        : tasks.map((t) => ({
-            id: t.id,
-            date_start: t.date_start,
-            date_end: t.date_end,
-            assignee: t.assignee,
-            text: t.text,
-            location: t.location,
-            time: t.time,
-            type: t.type,
-            repeat: t.repeat,
-            done: t.done,
-          }));
+    return tasks.map((task) => {
+      const start = toDateOnly(task.date_start);
+      const end = toDateOnly(task.date_end || task.date_start);
 
-    const fromItems = sourceItems.map(sheetTaskToEvent).filter(Boolean) as EventInput[];
+      return {
+        id: task.id,
+        title: task.text || "제목 없음",
+        start,
+        end:
+          end && end !== start
+            ? getLocalDateString(new Date(parseLocalDate(end).getTime() + 24 * 60 * 60 * 1000))
+            : undefined,
+        allDay: true,
+        extendedProps: {
+          task,
+        },
+      };
+    });
+  }, [tasks]);
 
-    return [...fromItems, ...holidays];
-  }, [tasks, sheetTasks, holidays]);
+  const selectedTasks = useMemo(() => {
+    return tasks
+      .filter((task) => {
+        const start = toDateOnly(task.date_start);
+        const end = toDateOnly(task.date_end || task.date_start);
 
-  const handlePrev = () => {
-    calendarRef.current?.getApi().prev();
-    updateTitle();
-  };
+        if (!start) return false;
+        if (!end) return isSameDate(start, selectedDate);
 
-  const handleNext = () => {
-    calendarRef.current?.getApi().next();
-    updateTitle();
-  };
+        return start <= selectedDate && selectedDate <= end;
+      })
+      .sort((a, b) => {
+        if ((a.done ? 1 : 0) !== (b.done ? 1 : 0)) {
+          return (a.done ? 1 : 0) - (b.done ? 1 : 0);
+        }
+        return toDateOnly(a.date_start).localeCompare(toDateOnly(b.date_start));
+      });
+  }, [tasks, selectedDate]);
 
-  const handleToday = () => {
-    calendarRef.current?.getApi().today();
-    updateTitle();
-  };
+  function handleDateClick(arg: DateClickArg) {
+    setSelectedDate(arg.dateStr);
+  }
 
-  const updateTitle = () => {
-    setTimeout(() => {
-      const api = calendarRef.current?.getApi();
-      if (api) {
-        const date = api.getDate();
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        setCurrentTitle(`${year}년 ${month}월`);
-      }
-    }, 0);
-  };
+  function handleEventClick(arg: EventClickArg) {
+    const task = arg.event.extendedProps.task as Task | undefined;
+    if (!task) return;
+    setSelectedDate(toDateOnly(arg.event.startStr));
+    onEdit(task);
+  }
 
-  const toggleView = () => {
+  function goToday() {
     const api = calendarRef.current?.getApi();
-    if (!api) return;
+    api?.today();
+    setSelectedDate(getLocalDateString());
+  }
 
-    if (currentView === "month") {
-      api.changeView("listMonth");
-      setCurrentView("list");
-    } else {
-      api.changeView("dayGridMonth");
-      setCurrentView("month");
-    }
-  };
-
-  useEffect(() => {
-    updateTitle();
-  }, []);
+  function renderEventContent(arg: EventContentArg) {
+    return (
+      <div className="calendar-event-chip">
+        <span className="calendar-event-chip__text">{arg.event.title}</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="calendar-shell">
-      {/* Custom Header */}
-      <div className="calendar-header">
-        <div className="calendar-nav">
-          <button onClick={handlePrev} className="calendar-nav-btn" aria-label="이전 달">
-            <ChevronLeft size={20} />
-          </button>
-          <button onClick={handleToday} className="calendar-today-btn">
+    <section className="calendar-view">
+      <div className="calendar-shell">
+        <div className="calendar-topbar">
+          <div>
+            <p className="calendar-topbar__eyebrow">Monthly View</p>
+            <h2 className="calendar-topbar__title">한눈에 보는 일정</h2>
+          </div>
+
+          <button type="button" className="calendar-today-btn" onClick={goToday}>
             오늘
-          </button>
-          <button onClick={handleNext} className="calendar-nav-btn" aria-label="다음 달">
-            <ChevronRight size={20} />
           </button>
         </div>
 
-        <h2 className="calendar-title">{currentTitle}</h2>
-
-        <button onClick={toggleView} className="calendar-view-btn" aria-label="뷰 전환">
-          {currentView === "month" ? <List size={18} /> : <Calendar size={18} />}
-        </button>
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          locale={koLocale}
+          locales={[koLocale]}
+          fixedWeekCount={false}
+          height="auto"
+          headerToolbar={{
+            left: "prev",
+            center: "title",
+            right: "next",
+          }}
+          dayMaxEventRows={2}
+          moreLinkText={(count) => `+${count}`}
+          events={events}
+          dateClick={handleDateClick}
+          eventClick={handleEventClick}
+          eventContent={renderEventContent}
+          dayHeaderFormat={{ weekday: "short" }}
+          titleFormat={{ year: "numeric", month: "long" }}
+          buttonText={{
+            today: "오늘",
+          }}
+        />
       </div>
 
-      {loading && <div className="calendar-loading">불러오는 중...</div>}
+      <section className="calendar-selected card">
+        <div className="calendar-selected__head">
+          <div>
+            <p className="calendar-selected__eyebrow">Selected Day</p>
+            <h3 className="calendar-selected__title">{formatSelectedDate(selectedDate)}</h3>
+          </div>
+          <span className="calendar-selected__count">{selectedTasks.length}</span>
+        </div>
 
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-        locales={[koLocale]}
-        locale="ko"
-        timeZone="local"
-        initialView="dayGridMonth"
-        height="auto"
-        dayMaxEvents={5}
-        fixedWeekCount={false}
-        events={events}
-        headerToolbar={false}
-        eventOrder={(a: any, b: any) => {
-          const aMulti = a.extendedProps?.isMultiDay ? 0 : 1;
-          const bMulti = b.extendedProps?.isMultiDay ? 0 : 1;
-          return aMulti - bMulti;
-        }}
-        dayCellContent={(arg) => arg.dayNumberText.replace("일", "")}
-        eventContent={(arg) => {
-          const isMultiDay = arg.event.extendedProps.isMultiDay;
-          const isHoliday = arg.event.extendedProps.isHoliday;
-          const eventColor = arg.event.extendedProps.eventColor;
+        {selectedTasks.length > 0 ? (
+          <div className="section-stack">
+            {selectedTasks.map((task) => (
+              <div key={task.id} className="calendar-task-wrap">
+                <div className="calendar-task-meta">
+                  <span className="calendar-task-meta__type">{getTaskTypeLabel(task)}</span>
+                  <span className="calendar-task-meta__date">
+                    {fmtDate(parseLocalDate(toDateOnly(task.date_start)))}
+                    {task.date_end && task.date_end !== task.date_start
+                      ? ` ~ ${fmtDate(parseLocalDate(toDateOnly(task.date_end)))}`
+                      : ""}
+                  </span>
+                </div>
 
-          if (isHoliday) {
-            return <span className="holiday-text">{arg.event.title}</span>;
-          }
-
-          if (isMultiDay) {
-            return (
-              <div className="multi-event-content">
-                <span className="event-title">{arg.event.title}</span>
+                <TaskCard task={task} onEdit={onEdit} onToggle={onToggle} onDelete={onDelete} />
               </div>
-            );
-          }
-
-          return (
-            <div className="single-event-content">
-              <span className="event-dot" style={{ backgroundColor: eventColor }} />
-              <span className="event-title">{arg.event.title}</span>
-            </div>
-          );
-        }}
-        eventClick={(info) => {
-          const raw = info.event.extendedProps.raw as Task | undefined;
-          const isHoliday = info.event.extendedProps.isHoliday;
-
-          if (isHoliday) return;
-          if (raw && onEdit) onEdit(raw);
-        }}
-        datesSet={() => updateTitle()}
-      />
-    </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-card card calendar-empty">
+            <p>선택한 날짜에 일정이 없어.</p>
+          </div>
+        )}
+      </section>
+    </section>
   );
 }
