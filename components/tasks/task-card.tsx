@@ -1,42 +1,42 @@
-"use client"
+"use client";
 
-import { CheckCircle2, Circle, Clock } from "lucide-react"
-import { parseTime } from "@/lib/dateUtils"
+import { CheckCircle2, Circle, Clock } from "lucide-react";
+import { parseTime } from "@/lib/dateUtils";
 
 export interface Task {
-  id: string
-  text: string
-  date_start: string
-  date_end?: string
-  time?: string
-  assignee: string
-  type: string
-  done: boolean
-  repeat?: string
-  location?: string
-  originalId?: string
-  occurrenceDate?: string
-  completedDates?: string[]
+  id: string;
+  text: string;
+  date_start: string;
+  date_end?: string;
+  time?: string;
+  assignee: "하나" | "민효" | "함께" | "데이트";
+  type: "ui" | "nui" | "uni" | "nuni" | "routine";
+  done: boolean;
+  repeat?: string;
+  location?: string;
+  originalId?: string;
+  occurrenceDate?: string;
+  completedDates?: string[] | string;
 }
 
 interface Props {
-  task: Task
-  onEdit: (task: Task) => void
-  onToggle: (task: Task) => void
-  onDelete: (id: string) => void
-  compact?: boolean
+  task: Task;
+  onEdit: (task: Task) => void;
+  onToggle: (task: Task) => void;
+  onDelete: (id: string) => void;
+  compact?: boolean;
 }
 
 function getAssigneeColor(assignee: string) {
-  if (assignee === "\uD558\uB098") return "#d4a843"
-  if (assignee === "\uBBFC\uD6A8") return "#3a8c6a"
-  if (assignee === "\uD568\uAED8") return "#7c6fcc"
-  if (assignee === "\uB370\uC774\uD2B8") return "#e06b9a"
-  return "var(--gold)"
+  if (assignee === "하나") return "#d4a843";
+  if (assignee === "민효") return "#3a8c6a";
+  if (assignee === "함께") return "#7c6fcc";
+  if (assignee === "데이트") return "#e06b9a";
+  return "var(--gold)";
 }
 
 export function TaskCard({ task, onEdit, onToggle, compact = false }: Props) {
-  const timeDisplay = parseTime(task.time)
+  const timeDisplay = parseTime(task.time);
 
   return (
     <div
@@ -54,23 +54,23 @@ export function TaskCard({ task, onEdit, onToggle, compact = false }: Props) {
         WebkitTapHighlightColor: "transparent",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)"
+        e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"
+        e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
       }}
       onMouseDown={(e) => {
-        e.currentTarget.style.transform = "scale(0.985)"
+        e.currentTarget.style.transform = "scale(0.985)";
       }}
       onMouseUp={(e) => {
-        e.currentTarget.style.transform = "scale(1)"
+        e.currentTarget.style.transform = "scale(1)";
       }}
     >
       <button
         type="button"
         onClick={(e) => {
-          e.stopPropagation()
-          onToggle(task)
+          e.stopPropagation();
+          onToggle(task);
         }}
         style={{
           color: task.done ? "var(--gold)" : "rgba(255,255,255,0.2)",
@@ -130,5 +130,5 @@ export function TaskCard({ task, onEdit, onToggle, compact = false }: Props) {
         }}
       />
     </div>
-  )
+  );
 }

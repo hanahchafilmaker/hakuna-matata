@@ -50,9 +50,7 @@ function formatSelectedDate(dateStr: string) {
 
 function getTaskTypeLabel(task: Task) {
   if (task.repeat && task.repeat !== "none") return "루틴";
-  if (task.type === "meeting") return "미팅";
-  if (task.type === "work") return "업무";
-  if (task.type === "life") return "생활";
+  if (task.type === "routine") return "루틴";
   if (task.type === "ui") return "중요·긴급";
   if (task.type === "nui") return "중요";
   if (task.type === "uni") return "긴급";
