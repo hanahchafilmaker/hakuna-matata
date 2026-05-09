@@ -18,6 +18,31 @@ import {
   secondaryBtnStyle,
   primaryBtnStyle,
 } from "@/components/tasks/task-modal-constants";
+import {
+  overlayStyle,
+  sheetStyle,
+  headerStyle,
+  headerTextWrapStyle,
+  headerEyebrowStyle,
+  headerTitleStyle,
+  headerMetaStyle,
+  headerDotStyle,
+  headerMetaTextStyle,
+  bodyStyle,
+  titleBlockStyle,
+  titleLabelStyle,
+  timeWrapStyle,
+  timeToggleStyle,
+  repeatWrapStyle,
+  repeatDayStyle,
+  repeatResetStyle,
+  doneCardStyle,
+  doneTitleStyle,
+  doneDescStyle,
+  footerStyle,
+  getTypeDotColor,
+  getAssigneeDotColor,
+} from "@/components/tasks/task-modal-styles";
 
 type Props = {
   task: Partial<Task> | null;
@@ -43,27 +68,6 @@ function normalizeTask(task?: Partial<Task> | null): Partial<Task> & { _hasTime:
     done: task?.done || false,
     _hasTime: !!rawTime,
   };
-}
-
-function getTypeDotColor(type?: Task["type"]) {
-  switch (type) {
-    case "ui":
-      return "#ef6868";
-    case "nui":
-      return "#d4af37";
-    case "uni":
-      return "#6ea8ff";
-    default:
-      return "rgba(255,255,255,0.35)";
-  }
-}
-
-function getAssigneeDotColor(assignee?: string) {
-  if (assignee === "하나") return "#d4a843";
-  if (assignee === "민효") return "#3a8c6a";
-  if (assignee === "함께") return "#7c6fcc";
-  if (assignee === "데이트") return "#e06b9a";
-  return "rgba(255,255,255,0.35)";
 }
 
 export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }: Props) {
@@ -117,112 +121,22 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
   }
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 999,
-        background: "rgba(0,0,0,0.52)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "center",
-        padding: "12px 12px calc(12px + env(safe-area-inset-bottom))",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: 430,
-          borderRadius: 26,
-          overflow: "hidden",
-          background: "linear-gradient(180deg, rgba(11,16,28,0.98), rgba(8,12,22,0.99))",
-          border: "1px solid rgba(255,255,255,0.07)",
-          boxShadow: "0 24px 50px rgba(0,0,0,0.38)",
-        }}
-      >
-        <div
-          style={{
-            padding: "14px 16px 12px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 11,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.45)",
-              }}
-            >
-              {isEditMode ? "EDIT" : "NEW"}
-            </p>
+    <div onClick={onClose} style={overlayStyle}>
+      <div onClick={(e) => e.stopPropagation()} style={sheetStyle}>
+        <div style={headerStyle}>
+          <div style={headerTextWrapStyle}>
+            <p style={headerEyebrowStyle}>{isEditMode ? "EDIT" : "NEW"}</p>
 
-            <h3
-              style={{
-                margin: "4px 0 0",
-                fontSize: 18,
-                lineHeight: 1.2,
-                fontWeight: 700,
-                color: "#fff",
-              }}
-            >
-              {isEditMode ? "일정 수정" : "새 일정"}
-            </h3>
+            <h3 style={headerTitleStyle}>{isEditMode ? "일정 수정" : "새 일정"}</h3>
 
-            <div
-              style={{
-                marginTop: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: getTypeDotColor(form.type),
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.58)",
-                }}
-              >
+            <div style={headerMetaStyle}>
+              <span style={headerDotStyle(getTypeDotColor(form.type))} />
+              <span style={headerMetaTextStyle}>
                 {TYPES.find((t) => t.value === form.type)?.label || "일반"}
               </span>
 
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: getAssigneeDotColor(form.assignee),
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.58)",
-                }}
-              >
-                {form.assignee || "하나"}
-              </span>
+              <span style={headerDotStyle(getAssigneeDotColor(form.assignee))} />
+              <span style={headerMetaTextStyle}>{form.assignee || "하나"}</span>
             </div>
           </div>
 
@@ -232,26 +146,9 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              maxHeight: "72vh",
-              overflowY: "auto",
-              padding: "14px 16px 16px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 14,
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: "rgba(255,255,255,0.72)",
-                }}
-              >
-                제목
-              </div>
+          <div style={bodyStyle}>
+            <div style={titleBlockStyle}>
+              <div style={titleLabelStyle}>제목</div>
 
               <textarea
                 value={form.text || ""}
@@ -320,22 +217,11 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
             </div>
 
             <FieldBlock icon={<Clock3 size={13} />} label="시간">
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={timeWrapStyle}>
                 <button
                   type="button"
                   onClick={() => setHasTime((v) => !v)}
-                  style={{
-                    height: 38,
-                    borderRadius: 14,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: hasTime ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
-                    color: hasTime ? "#fff" : "rgba(255,255,255,0.55)",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    textAlign: "left",
-                    padding: "0 12px",
-                    cursor: "pointer",
-                  }}
+                  style={timeToggleStyle(hasTime)}
                 >
                   {hasTime ? "시간 사용 중" : "시간 없음"}
                 </button>
@@ -363,7 +249,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
             </FieldBlock>
 
             <FieldBlock icon={<Repeat size={13} />} label="반복">
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div style={repeatWrapStyle}>
                 {DAY_ORDER.map((day) => {
                   const active = repeatDays.includes(day);
                   return (
@@ -371,23 +257,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                       key={day}
                       type="button"
                       onClick={() => toggleRepeatDay(day)}
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 999,
-                        fontSize: 11,
-                        fontWeight: 800,
-                        border: active
-                          ? "1px solid rgba(212,175,55,0.45)"
-                          : "1px solid rgba(255,255,255,0.08)",
-                        background: active ? "rgba(212,175,55,0.16)" : "rgba(255,255,255,0.04)",
-                        color: active ? "#f1d382" : "rgba(255,255,255,0.58)",
-                        cursor: "pointer",
-                        transition: "all 0.15s ease",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
+                      style={repeatDayStyle(active)}
                     >
                       {DAY_LABELS[day as keyof typeof DAY_LABELS]}
                     </button>
@@ -395,39 +265,14 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                 })}
 
                 {repeatDays.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setRepeatDays([])}
-                    style={{
-                      height: 36,
-                      padding: "0 10px",
-                      borderRadius: 999,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      background: "rgba(255,255,255,0.04)",
-                      color: "rgba(255,255,255,0.65)",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <button type="button" onClick={() => setRepeatDays([])} style={repeatResetStyle}>
                     초기화
                   </button>
                 )}
               </div>
             </FieldBlock>
 
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "12px 12px",
-                borderRadius: 16,
-                background: "rgba(255,255,255,0.035)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                cursor: "pointer",
-              }}
-            >
+            <label style={doneCardStyle}>
               <input
                 type="checkbox"
                 checked={!!form.done}
@@ -435,28 +280,13 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                 style={{ width: 16, height: 16, accentColor: "#d4af37" }}
               />
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>완료 상태</div>
-                <div
-                  style={{
-                    marginTop: 2,
-                    fontSize: 10,
-                    color: "rgba(255,255,255,0.42)",
-                  }}
-                >
-                  이미 끝난 일정이면 체크해둘 수 있어.
-                </div>
+                <div style={doneTitleStyle}>완료 상태</div>
+                <div style={doneDescStyle}>이미 끝난 일정이면 체크해둘 수 있어.</div>
               </div>
             </label>
           </div>
 
-          <div
-            style={{
-              padding: "12px 16px 16px",
-              borderTop: "1px solid rgba(255,255,255,0.06)",
-              display: "flex",
-              gap: 8,
-            }}
-          >
+          <div style={footerStyle}>
             <button type="button" onClick={onClose} style={secondaryBtnStyle}>
               취소
             </button>
