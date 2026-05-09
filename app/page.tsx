@@ -43,8 +43,8 @@ export default function Page() {
 
       return repeat
         .split(",")
-        .map((item) => item.trim())
-        .some((item) => dayMap[item] === todayNum || item === todayNum.toString());
+        .map((item: string) => item.trim())
+        .some((item: string) => dayMap[item] === todayNum || item === todayNum.toString());
     });
   }, [tasks]);
 
