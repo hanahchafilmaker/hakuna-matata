@@ -112,10 +112,8 @@ function StatCard({
           color: "var(--gold-soft)"
         }}
       >
-
-        {icon}
-        {title}
-
+        <span style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>{icon}</span>
+        <span>{title}</span>
       </div>
 
 
@@ -372,15 +370,16 @@ function RoutineProgressPanel({
 
       <div
         style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
           fontSize: 11,
           color: "var(--gold-soft)",
           marginBottom: 8
         }}
       >
-
-        <Repeat2 size={12} />
-        오늘 루틴
-
+        <span style={{ display: "flex", alignItems: "center" }}><Repeat2 size={12} /></span>
+        <span>오늘 루틴</span>
       </div>
 
 

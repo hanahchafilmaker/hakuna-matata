@@ -185,9 +185,10 @@ export function CalendarView({ tasks = [], onEdit }: Props) {
   }, [])
 
   const events = useMemo(() => {
-    const fromProps = tasks
-      .map((t) =>
-        sheetTaskToEvent({
+    // sheetTasks 로딩 완료 시 sheetTasks 우선 사용 (tasks props와 중복 방지)
+    const sourceItems: SheetTask[] = sheetTasks.length > 0
+      ? sheetTasks
+      : tasks.map((t) => ({
           id: t.id,
           date_start: t.date_start,
           date_end: t.date_end,
@@ -198,13 +199,11 @@ export function CalendarView({ tasks = [], onEdit }: Props) {
           type: t.type,
           repeat: t.repeat,
           done: t.done,
-        }),
-      )
-      .filter(Boolean) as EventInput[]
+        }))
 
-    const fromSheet = sheetTasks.map(sheetTaskToEvent).filter(Boolean) as EventInput[]
+    const fromItems = sourceItems.map(sheetTaskToEvent).filter(Boolean) as EventInput[]
 
-    return [...fromProps, ...fromSheet, ...holidays]
+    return [...fromItems, ...holidays]
   }, [tasks, sheetTasks, holidays])
 
   const handlePrev = () => {

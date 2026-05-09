@@ -117,6 +117,35 @@
   }
 }
 
+/* star-background.tsx에서 starTwinkle로 참조 */
+@keyframes starTwinkle {
+
+  0%,
+  100% {
+    opacity: .55;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: .12;
+    transform: scale(.7);
+  }
+}
+
+@keyframes moonPulse {
+
+  0%,
+  100% {
+    opacity: .7;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
 @keyframes moonFloat {
   0% {
     transform: translateX(-50%) translateY(0px);
@@ -1141,4 +1170,186 @@ textarea.field-input {
 
 .fc-scrollgrid-sync-table {
   border: none !important;
+}
+
+/* ────────────────────────────────
+   디자인 개선 — across modal
+──────────────────────────────── */
+.across-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fadeIn 0.18s ease;
+  padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+}
+
+.across-modal-card {
+  width: 100%;
+  max-width: 390px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(14, 22, 38, 0.98) 0%, rgba(7, 12, 22, 0.99) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  padding: 20px 20px 16px;
+  animation: slideUp 0.24s cubic-bezier(0.22, 0.85, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.across-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.across-modal-line {
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #e2cc78, #c9a84c);
+  flex-shrink: 0;
+}
+
+.across-modal-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gold-soft);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.across-modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.across-modal-section strong {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.across-note {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.across-modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.across-btn-primary {
+  flex: 1;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.9), rgba(180, 147, 40, 0.9));
+  color: #17130a;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.across-btn-primary:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+.across-btn-danger {
+  flex: 1;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.08);
+  color: rgba(248, 113, 113, 0.9);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.across-btn-danger:active {
+  transform: scale(0.97);
+  background: rgba(239, 68, 68, 0.14);
+}
+
+/* ────────────────────────────────
+   스크롤바 전체 숨기기 (모바일 최적화)
+──────────────────────────────── */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* ────────────────────────────────
+   탭바 active 인디케이터 개선
+──────────────────────────────── */
+.tab-btn {
+  position: relative;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--gold-soft);
+}
+
+/* ────────────────────────────────
+   TaskCard hover 개선
+──────────────────────────────── */
+.task-card-row {
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.task-card-row:active {
+  transform: scale(0.985);
+}
+
+/* ────────────────────────────────
+   캘린더 day 셀 최소 높이 축소 (모바일)
+──────────────────────────────── */
+@media (max-width: 400px) {
+  .fc-daygrid-day {
+    min-height: 64px !important;
+  }
+
+  .fc-daygrid-day-frame {
+    min-height: 60px !important;
+  }
+
+  .fc-daygrid-day-number {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
 }

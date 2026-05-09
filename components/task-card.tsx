@@ -50,10 +50,13 @@ export function TaskCard({ task, onEdit, onToggle, compact }: Props) {
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        transition: 'all 0.2s',
+        transition: 'all 0.15s ease',
+        WebkitTapHighlightColor: 'transparent',
       }}
       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)')}
+      onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.985)')}
+      onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
     >
       <button
         type="button"

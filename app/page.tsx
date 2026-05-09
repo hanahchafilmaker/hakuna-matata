@@ -111,22 +111,22 @@ export default function HakunaApp() {
         {/* 헤더 */}
         <header style={{ position: 'sticky', top: 0, zIndex: 100, padding: 'max(14px,env(safe-area-inset-top)) 18px 10px', background: `rgba(4,8,16,${headerOpacity})`, backdropFilter: 'blur(20px) saturate(1.8)', WebkitBackdropFilter: 'blur(20px) saturate(1.8)', borderBottom: '1px solid rgba(255,255,255,0.07)', transition: 'background 0.2s ease' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.4)', border: '1px solid var(--gold-border)', background: '#0d1a2e' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, overflow: 'hidden', boxShadow: '0 4px 14px rgba(0,0,0,0.4)', border: '1px solid var(--gold-border)', background: '#0d1a2e' }}>
               <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/fPTvS-hxy7JQHRA192mEGeoQiLD7oV1Gmgy3.jpg" alt="Hakuna Matata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div style={{ flex: 1, lineHeight: 1.1 }}>
-              <div style={{ fontFamily: "'Cinzel',serif", fontSize: 16, fontWeight: 700, color: 'var(--gold-soft)', letterSpacing: '0.01em' }}>Hakuna Matata</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', marginTop: 3, display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span>할 일 {todoCount}개</span>
-                <span style={{ opacity: 0.4 }}>·</span>
-                <span>루틴 {routineDone}/{routines.length}</span>
+            <div style={{ flex: 1, lineHeight: 1.2 }}>
+              <div style={{ fontFamily: "'Cinzel',serif", fontSize: 15, fontWeight: 700, color: 'var(--gold-soft)', letterSpacing: '0.02em' }}>Hakuna Matata</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2, display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span>할 일 <strong style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{todoCount}</strong></span>
+                <span style={{ opacity: 0.3 }}>·</span>
+                <span>루틴 <strong style={{ color: routineDone === routines.length && routines.length > 0 ? 'var(--gold-soft)' : 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{routineDone}/{routines.length}</strong></span>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button type="button" onClick={() => setShowDone((v) => !v)} className="toggle-done-btn">
                 {showDone ? '완료 숨기기' : '완료 보기'}
               </button>
-              <button type="button" onClick={() => refresh()} className="refresh-btn">
+              <button type="button" onClick={() => refresh()} className="refresh-btn" title="새로고침">
                 <RefreshCw width={13} height={13} className={isLoading ? 'spin' : ''} />
               </button>
             </div>

@@ -463,8 +463,11 @@ export function MatrixView({
 
               style={{
                 padding: '7px 11px',
-
                 borderRadius: 999,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                flexShrink: 0,
 
                 border:
                   activeTab === tab

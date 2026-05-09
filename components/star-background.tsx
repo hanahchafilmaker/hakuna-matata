@@ -1,22 +1,24 @@
 'use client'
 
-import { useMemo } from 'react'
+const STARS = [
+  { id: 0, x: 8, y: 8, size: 1.1, dur: 4.2, delay: 0.2, opacity: 0.42 },
+  { id: 1, x: 18, y: 20, size: 0.8, dur: 5.6, delay: 1.1, opacity: 0.32 },
+  { id: 2, x: 28, y: 7, size: 1.4, dur: 6.2, delay: 2.3, opacity: 0.48 },
+  { id: 3, x: 42, y: 18, size: 0.9, dur: 4.8, delay: 1.7, opacity: 0.36 },
+  { id: 4, x: 55, y: 10, size: 1.2, dur: 5.4, delay: 3.1, opacity: 0.44 },
+  { id: 5, x: 66, y: 5, size: 1.5, dur: 6.8, delay: 0.9, opacity: 0.4 },
+  { id: 6, x: 76, y: 16, size: 0.9, dur: 4.6, delay: 2.7, opacity: 0.35 },
+  { id: 7, x: 86, y: 9, size: 1.1, dur: 5.8, delay: 1.4, opacity: 0.46 },
+  { id: 8, x: 94, y: 24, size: 0.8, dur: 6.4, delay: 3.6, opacity: 0.33 },
+  { id: 9, x: 14, y: 38, size: 1.0, dur: 5.1, delay: 2.2, opacity: 0.3 },
+  { id: 10, x: 34, y: 32, size: 1.3, dur: 7.1, delay: 0.5, opacity: 0.38 },
+  { id: 11, x: 49, y: 44, size: 0.9, dur: 4.9, delay: 4.1, opacity: 0.34 },
+  { id: 12, x: 62, y: 34, size: 1.1, dur: 6.5, delay: 1.8, opacity: 0.42 },
+  { id: 13, x: 78, y: 40, size: 0.8, dur: 5.7, delay: 3.3, opacity: 0.31 },
+  { id: 14, x: 90, y: 36, size: 1.4, dur: 6.9, delay: 2.5, opacity: 0.39 },
+]
 
 export function StarBackground() {
-  const stars = useMemo(
-    () =>
-      Array.from({ length: 42 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 56,
-        size: Math.random() * 1.6 + 0.6,
-        dur: 3.5 + Math.random() * 4,
-        delay: Math.random() * 6,
-        opacity: 0.18 + Math.random() * 0.38,
-      })),
-    []
-  )
-
   return (
     <div
       aria-hidden="true"
@@ -46,7 +48,7 @@ export function StarBackground() {
         }}
       />
 
-      {stars.map((s) => (
+      {STARS.map((s) => (
         <span
           key={s.id}
           className="star-bg-dot"
@@ -54,8 +56,8 @@ export function StarBackground() {
             position: 'absolute',
             left: `${s.x}%`,
             top: `${s.y}%`,
-            width: s.size,
-            height: s.size,
+            width: `${s.size}px`,
+            height: `${s.size}px`,
             borderRadius: '50%',
             background: 'rgba(255,245,210,0.95)',
             opacity: s.opacity,
@@ -121,105 +123,6 @@ export function StarBackground() {
           }}
         />
       </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 90,
-          height: 120,
-          background:
-            'linear-gradient(180deg, transparent 0%, rgba(8,12,18,0.12) 45%, rgba(4,7,12,0.28) 100%)',
-        }}
-      />
-
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          bottom: 0,
-          width: '100%',
-        }}
-      >
-        <svg
-          viewBox="0 0 390 150"
-          preserveAspectRatio="none"
-          style={{ width: '100%', height: 150, display: 'block' }}
-        >
-          <path
-            d="M0 98 Q40 76 88 86 Q140 60 198 82 Q250 56 310 74 Q350 62 390 66 L390 150 L0 150 Z"
-            fill="rgba(5,9,15,0.88)"
-          />
-          <path
-            d="M0 116 Q58 96 120 106 Q178 90 236 104 Q298 90 390 96 L390 150 L0 150 Z"
-            fill="rgba(3,6,10,0.96)"
-          />
-          <path
-            d="M0 132 Q80 118 150 126 Q220 114 300 124 Q345 118 390 120 L390 150 L0 150 Z"
-            fill="#02050a"
-          />
-          <line
-            x1="55"
-            y1="150"
-            x2="55"
-            y2="92"
-            stroke="rgba(201,168,76,0.20)"
-            strokeWidth="2"
-          />
-          <ellipse
-            cx="55"
-            cy="84"
-            rx="18"
-            ry="10"
-            fill="rgba(201,168,76,0.10)"
-          />
-          <line
-            x1="318"
-            y1="150"
-            x2="318"
-            y2="84"
-            stroke="rgba(201,168,76,0.16)"
-            strokeWidth="1.8"
-          />
-          <ellipse
-            cx="318"
-            cy="76"
-            rx="15"
-            ry="8"
-            fill="rgba(201,168,76,0.08)"
-          />
-          <line
-            x1="184"
-            y1="150"
-            x2="184"
-            y2="110"
-            stroke="rgba(201,168,76,0.10)"
-            strokeWidth="1.2"
-          />
-          <ellipse
-            cx="184"
-            cy="104"
-            rx="10"
-            ry="6"
-            fill="rgba(201,168,76,0.06)"
-          />
-        </svg>
-      </div>
-
-      <style jsx global>{`
-        @keyframes starTwinkle {
-          0%,
-          100% {
-            opacity: 0.22;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.14);
-          }
-        }
-      `}</style>
     </div>
   )
 }

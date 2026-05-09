@@ -34,7 +34,8 @@ export function useTasks() {
       if (retryCount >= 2) return
       setTimeout(() => revalidate({ retryCount }), 3000)
     },
-    fallbackData: [],
+    fallbackData: [] as Task[],
+    revalidateOnFocus: false,
   })
 
   const today = todayStr()
