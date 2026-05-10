@@ -376,15 +376,25 @@
 }
 
 .calendar-shell .fc .fc-daygrid-day-number {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text);
   text-decoration: none !important;
+}
+
+/* 한국어 로케일 "일" 텍스트 숨기기 */
+.calendar-shell .fc .fc-daygrid-day-number::after {
+  content: none !important;
+}
+
+/* "일" 글자를 숫자만 표시되도록 처리 */
+.calendar-shell .fc .fc-daygrid-day-number {
+  font-variant-numeric: tabular-nums;
 }
 
 .calendar-shell .fc .fc-day-today {

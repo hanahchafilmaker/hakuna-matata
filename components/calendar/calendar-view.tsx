@@ -173,6 +173,10 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
           eventContent={renderEventContent}
           dayHeaderFormat={{ weekday: "short" }}
           titleFormat={{ year: "numeric", month: "long" }}
+          dayHeaderContent={(arg) => arg.text.replace("요일", "")}
+          dayCellContent={(arg) => ({
+            html: `<a class="fc-daygrid-day-number">${arg.date.getDate()}</a>`,
+          })}
           buttonText={{
             today: "오늘",
           }}
