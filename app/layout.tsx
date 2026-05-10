@@ -22,6 +22,21 @@ export const metadata: Metadata = {
   title: "Hakuna Matata",
   description: "라이온킹 무드의 일정 관리 앱",
   generator: "v0.app",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "하쿠나 마타타",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon-512.png" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
