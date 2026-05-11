@@ -14,6 +14,7 @@ export interface Task {
   done: boolean;
   repeat?: string;
   location?: string;
+  memo?: string;
   originalId?: string;
   occurrenceDate?: string;
   completedDates?: string[] | string;

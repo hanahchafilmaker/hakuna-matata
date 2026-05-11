@@ -137,6 +137,35 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData[]> {
   }
 }
 
+function getAssigneeEventColors(assignee: string) {
+  if (assignee === "민효") {
+    return {
+      bg: "linear-gradient(180deg, rgba(58,140,106,0.96), rgba(46,115,87,0.96))",
+      shadow: "0 0 0 1px rgba(58,140,106,0.9) inset",
+      solid: "rgba(58,140,106,0.96)",
+    };
+  }
+  if (assignee === "함께") {
+    return {
+      bg: "linear-gradient(180deg, rgba(124,111,204,0.96), rgba(99,88,170,0.96))",
+      shadow: "0 0 0 1px rgba(124,111,204,0.9) inset",
+      solid: "rgba(124,111,204,0.96)",
+    };
+  }
+  if (assignee === "데이트") {
+    return {
+      bg: "linear-gradient(180deg, rgba(224,107,154,0.96), rgba(191,82,126,0.96))",
+      shadow: "0 0 0 1px rgba(224,107,154,0.9) inset",
+      solid: "rgba(224,107,154,0.96)",
+    };
+  }
+  return {
+    bg: "linear-gradient(180deg, rgba(218,164,68,0.98), rgba(204,147,47,0.98))",
+    shadow: "0 0 0 1px rgba(226,176,76,0.95) inset",
+    solid: "rgba(214,160,64,0.98)",
+  };
+}
+
 function LocationModal({
   onSave,
   onClose,
@@ -230,27 +259,13 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
     return tasks.map((task) => {
       const start = toDateOnly(task.date_start);
       const end = toDateOnly(task.date_end || task.date_start);
-
       const startDate = parseLocalDate(start);
       const endDate = parseLocalDate(end);
       const diffDays = Math.round(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
       );
       const isRange = diffDays >= 1;
-
-      let bg = "rgba(212, 160, 64, 0.92)";
-      let border = "rgba(212, 160, 64, 0.98)";
-
-      if (task.assignee === "민효") {
-        bg = "rgba(58, 140, 106, 0.88)";
-        border = "rgba(58, 140, 106, 0.96)";
-      } else if (task.assignee === "함께") {
-        bg = "rgba(124, 111, 204, 0.88)";
-        border = "rgba(124, 111, 204, 0.96)";
-      } else if (task.assignee === "데이트") {
-        bg = "rgba(224, 107, 154, 0.88)";
-        border = "rgba(224, 107, 154, 0.96)";
-      }
+      const colors = getAssigneeEventColors(task.assignee);
 
       return {
         id: task.id,
@@ -261,11 +276,17 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
             ? getLocalDateString(new Date(parseLocalDate(end).getTime() + 24 * 60 * 60 * 1000))
             : undefined,
         allDay: true,
-        backgroundColor: bg,
-        borderColor: border,
+        display: "block" as const,
+        backgroundColor: colors.solid,
+        borderColor: "transparent",
         textColor: "#fff",
-        classNames: [isRange ? "calendar-event-range" : "calendar-event-single"],
-        extendedProps: { task, isRange },
+        extendedProps: {
+          task,
+          isRange,
+          eventBg: colors.bg,
+          eventShadow: colors.shadow,
+          eventSolid: colors.solid,
+        },
       };
     });
   }, [tasks]);
@@ -311,18 +332,24 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
 
   function renderEventContent(arg: EventContentArg) {
     const isRange = !!arg.event.extendedProps.isRange;
+    const eventBg = arg.event.extendedProps.eventBg as string;
+    const eventShadow = arg.event.extendedProps.eventShadow as string;
 
     return (
       <div
         className="calendar-event-chip"
         style={{
-          width: "100%",
-          minHeight: isRange ? 22 : 18,
+          width: isRange ? "calc(100% + 2px)" : "100%",
+          marginLeft: isRange ? -1 : 0,
+          minHeight: isRange ? 24 : 18,
           padding: isRange ? "0 8px" : "0 6px",
           display: "flex",
           alignItems: "center",
+          justifyContent: "flex-start",
           borderRadius: isRange ? 999 : 10,
           overflow: "hidden",
+          background: eventBg,
+          boxShadow: eventShadow,
         }}
       >
         <span
@@ -330,13 +357,14 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
           style={{
             display: "block",
             width: "100%",
-            fontSize: isRange ? 10 : 9,
-            lineHeight: 1.1,
+            fontSize: isRange ? 9 : 8,
+            lineHeight: 1.05,
             fontWeight: isRange ? 700 : 600,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            letterSpacing: "-0.02em",
+            letterSpacing: "-0.03em",
+            color: "#fff",
           }}
         >
           {arg.event.title}
@@ -386,8 +414,8 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
           maxWidth: "100%",
           margin: 0,
           boxSizing: "border-box",
-          paddingLeft: isMobile ? 6 : undefined,
-          paddingRight: isMobile ? 6 : undefined,
+          paddingLeft: isMobile ? 4 : undefined,
+          paddingRight: isMobile ? 4 : undefined,
           borderRadius: isMobile ? 0 : undefined,
         }}
       >
@@ -436,7 +464,8 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
           fixedWeekCount={false}
           height="auto"
           headerToolbar={{ left: "prev", center: "title", right: "next" }}
-          dayMaxEventRows={isMobile ? 3 : 2}
+          dayMaxEventRows={isMobile ? 4 : 3}
+          eventOrder="start,-duration,allDay,title"
           moreLinkText={(count) => `+${count}`}
           eventDisplay="block"
           events={events}
