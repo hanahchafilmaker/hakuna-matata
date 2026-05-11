@@ -1,7 +1,16 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, Clock3, LayoutGrid, MapPin, Repeat, UserRound, X } from "lucide-react";
+import {
+  CalendarDays,
+  Clock3,
+  LayoutGrid,
+  MapPin,
+  Repeat,
+  StickyNote,
+  UserRound,
+  X,
+} from "lucide-react";
 import type { Task } from "@/components/tasks/task-card";
 import { parseTime } from "@/lib/dateUtils";
 import { DAY_LABELS, parseRepeat, serializeRepeat } from "@/lib/repeatUtils";
@@ -63,6 +72,7 @@ function normalizeTask(task?: Partial<Task> | null): Partial<Task> & { _hasTime:
     date_start: task?.date_start || "",
     date_end: task?.date_end || task?.date_start || "",
     location: task?.location || "",
+    memo: task?.memo || "",
     time: rawTime || "",
     repeat: task?.repeat || "none",
     done: task?.done || false,
@@ -107,6 +117,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
     const payload: Partial<Task> = {
       ...form,
       text: form.text?.trim(),
+      memo: form.memo?.toString().trim() || "",
       date_end: form.date_end || form.date_start,
       time: hasTime ? parseTime(form.time) || "" : "",
       repeat: serializeRepeat(repeatDays as any),
@@ -245,6 +256,20 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                 onChange={(e) => updateField("location", e.target.value)}
                 placeholder="예: 송도 / 집 / 병원"
                 style={inputStyle}
+              />
+            </FieldBlock>
+
+            <FieldBlock icon={<StickyNote size={13} />} label="메모">
+              <textarea
+                value={form.memo || ""}
+                onChange={(e) => updateField("memo", e.target.value)}
+                rows={4}
+                placeholder="간단한 메모, 준비물, 체크사항"
+                style={{
+                  ...textareaStyle,
+                  minHeight: 96,
+                  resize: "vertical",
+                }}
               />
             </FieldBlock>
 
