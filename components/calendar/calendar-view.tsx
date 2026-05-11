@@ -1,16 +1,10 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import koLocale from "@fullcalendar/core/locales/ko";
-import type { DateClickArg } from "@fullcalendar/interaction";
-import type { EventClickArg, EventContentArg } from "@fullcalendar/core";
+import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Clock, MapPin, StickyNote } from "lucide-react";
 import type { Task } from "@/components/tasks/task-card";
-import { fmtDate } from "@/lib/dateUtils";
-import { CalendarTaskRow } from "@/components/calendar/calendar-task-row";
+import { parseLocalDate, fmtDate, getCalendarWeeks, diffDays, parseTime } from "@/lib/dateUtils";
+import { expandRepeat, isRepeating } from "@/lib/repeatUtils";
 
 type Props = {
   tasks: Task[];
@@ -19,512 +13,663 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-type ViewMode = "month" | "week";
+const PALETTE: Record<string, { bg: string; text: string }> = {
+  하나: {
+    bg: "#e9dfc7",
+    text: "#6b5a2b",
+  },
+  민효: {
+    bg: "#ddebe6",
+    text: "#2f5f52",
+  },
+  함께: {
+    bg: "#e7e4f5",
+    text: "#4b4596",
+  },
+  데이트: {
+    bg: "#f3e1e8",
+    text: "#7a3d57",
+  },
+};
 
-interface WeatherData {
-  temp: number;
-  weatherCode: number;
-  date: string;
+const DEFAULT_PAL = {
+  bg: "#eef1f4",
+  text: "#3a4452",
+};
+
+function getPal(task: Task) {
+  return PALETTE[task.assignee] ?? DEFAULT_PAL;
 }
 
-function toDateOnly(value?: string) {
-  if (!value) return "";
-  return value.slice(0, 10);
+function hexToRgb(hex: string) {
+  const safe = hex.replace("#", "");
+  const r = parseInt(safe.slice(0, 2), 16);
+  const g = parseInt(safe.slice(2, 4), 16);
+  const b = parseInt(safe.slice(4, 6), 16);
+  return `${r},${g},${b}`;
 }
 
-function isSameDate(a?: string, b?: string) {
-  return toDateOnly(a) === toDateOnly(b);
+type Bar = {
+  task: Task;
+  weekKey: string;
+  startCol: number;
+  endCol: number;
+  row: number;
+};
+
+function isMultiDay(task: Task) {
+  return !!(task.date_start && task.date_end && task.date_start !== task.date_end);
 }
 
-function getLocalDateString(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function buildBars(tasks: Task[], weeks: Date[][]): Bar[] {
+  const bars: Bar[] = [];
+
+  weeks.forEach((week) => {
+    const ws = week[0];
+    const we = week[6];
+    const weekKey = fmtDate(ws);
+
+    const candidates = tasks
+      .filter((t) => {
+        if (!isMultiDay(t)) return false;
+        const s = parseLocalDate(t.date_start);
+        const e = parseLocalDate(t.date_end || t.date_start);
+        if (!s || !e) return false;
+        return !(e < ws || s > we);
+      })
+      .sort(
+        (a, b) =>
+          (parseLocalDate(a.date_start)?.getTime() ?? 0) -
+          (parseLocalDate(b.date_start)?.getTime() ?? 0),
+      );
+
+    const used: { sc: number; ec: number; row: number }[] = [];
+
+    candidates.forEach((task) => {
+      const rawS = parseLocalDate(task.date_start)!;
+      const rawE = parseLocalDate(task.date_end || task.date_start)!;
+      const sc = diffDays(ws, rawS < ws ? ws : rawS);
+      const ec = diffDays(ws, rawE > we ? we : rawE);
+
+      let row = 0;
+      while (used.some((r) => r.row === row && !(ec < r.sc || sc > r.ec))) row++;
+
+      used.push({ sc, ec, row });
+      bars.push({ task, weekKey, startCol: sc, endCol: ec, row });
+    });
+  });
+
+  return bars;
 }
 
-function parseLocalDate(dateStr: string) {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
+function buildDots(tasks: Task[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+
+  tasks.forEach((t) => {
+    const key = t.date_start;
+    if (!key) return;
+
+    const colors = map.get(key) ?? [];
+    const c = getPal(t).bg;
+
+    if (!colors.includes(c)) colors.push(c);
+    map.set(key, colors);
+  });
+
+  return map;
 }
 
-function formatSelectedDate(dateStr: string) {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  if (!year || !month || !day) return dateStr;
-  const d = new Date(year, month - 1, day);
-  const week = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${year}년 ${month}월 ${day}일 ${week[d.getDay()]}요일`;
-}
-
-function getTaskTypeLabel(task: Task) {
-  if (task.repeat && task.repeat !== "none") return "루틴";
-  if (task.type === "routine") return "루틴";
-  if (task.type === "ui") return "중요·긴급";
-  if (task.type === "nui") return "중요";
-  if (task.type === "uni") return "긴급";
-  if (task.type === "nuni") return "일반";
-  return "일정";
-}
-
-function getDateRangeLabel(task: Task) {
-  const start = fmtDate(parseLocalDate(toDateOnly(task.date_start)));
-  const endValue = toDateOnly(task.date_end);
-  if (endValue && endValue !== toDateOnly(task.date_start)) {
-    return `${start} ~ ${fmtDate(parseLocalDate(endValue))}`;
-  }
-  return start;
-}
-
-function getWeatherEmoji(code: number): string {
-  if (code === 0) return "☀️";
-  if (code <= 2) return "🌤️";
-  if (code <= 3) return "☁️";
-  if (code <= 48) return "🌫️";
-  if (code <= 67) return "🌧️";
-  if (code <= 77) return "❄️";
-  if (code <= 82) return "🌦️";
-  if (code <= 86) return "🌨️";
-  if (code <= 99) return "⛈️";
-  return "🌡️";
-}
-
-function getStoredLocation(): { city: string; lat: number; lon: number } | null {
-  try {
-    const stored = localStorage.getItem("calendar-weather-location");
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-}
-
-function storeLocation(loc: { city: string; lat: number; lon: number }) {
-  try {
-    localStorage.setItem("calendar-weather-location", JSON.stringify(loc));
-  } catch {}
-}
-
-async function geocodeCity(
-  city: string,
-): Promise<{ lat: number; lon: number; name: string } | null> {
-  try {
-    const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ko&format=json`,
-    );
-    const data = await res.json();
-    if (data.results?.length > 0) {
-      const r = data.results[0];
-      return { lat: r.latitude, lon: r.longitude, name: r.name };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchWeather(lat: number, lon: number): Promise<WeatherData[]> {
-  try {
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max&timezone=auto&forecast_days=14`,
-    );
-    const data = await res.json();
-    return data.daily.time.map((date: string, i: number) => ({
-      date,
-      temp: Math.round(data.daily.temperature_2m_max[i]),
-      weatherCode: data.daily.weathercode[i],
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function getAssigneeEventColors(assignee: string) {
-  if (assignee === "민효") {
-    return {
-      bg: "linear-gradient(180deg, rgba(58,140,106,0.96), rgba(46,115,87,0.96))",
-      shadow: "0 0 0 1px rgba(58,140,106,0.9) inset",
-      solid: "rgba(58,140,106,0.96)",
-    };
-  }
-  if (assignee === "함께") {
-    return {
-      bg: "linear-gradient(180deg, rgba(124,111,204,0.96), rgba(99,88,170,0.96))",
-      shadow: "0 0 0 1px rgba(124,111,204,0.9) inset",
-      solid: "rgba(124,111,204,0.96)",
-    };
-  }
-  if (assignee === "데이트") {
-    return {
-      bg: "linear-gradient(180deg, rgba(224,107,154,0.96), rgba(191,82,126,0.96))",
-      shadow: "0 0 0 1px rgba(224,107,154,0.9) inset",
-      solid: "rgba(224,107,154,0.96)",
-    };
-  }
-  return {
-    bg: "linear-gradient(180deg, rgba(218,164,68,0.98), rgba(204,147,47,0.98))",
-    shadow: "0 0 0 1px rgba(226,176,76,0.95) inset",
-    solid: "rgba(214,160,64,0.98)",
-  };
-}
-
-function LocationModal({
-  onSave,
-  onClose,
-  initialCity,
+function DayPanel({
+  date,
+  tasks,
+  onEdit,
+  onToggle,
 }: {
-  onSave: (city: string, lat: number, lon: number) => void;
-  onClose: () => void;
-  initialCity?: string;
+  date: Date | null;
+  tasks: Task[];
+  onEdit: (t: Task) => void;
+  onToggle: (t: Task) => void;
 }) {
-  const [input, setInput] = useState(initialCity || "");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  if (!date) return null;
 
-  async function handleSave() {
-    if (!input.trim()) return;
-    setLoading(true);
-    setError("");
-    const result = await geocodeCity(input.trim());
-    setLoading(false);
-    if (result) {
-      onSave(result.name, result.lat, result.lon);
-    } else {
-      setError("도시를 찾을 수 없어요. 다시 입력해 주세요.");
-    }
-  }
+  const dayTasks = tasks.filter((t) => {
+    const s = parseLocalDate(t.date_start);
+    const e = parseLocalDate(t.date_end || t.date_start);
+    if (!s) return false;
+    return date >= s && date <= (e ?? s);
+  });
 
   return (
-    <div className="location-modal-backdrop" onClick={onClose}>
-      <div className="location-modal" onClick={(e) => e.stopPropagation()}>
-        <p className="location-modal__title">날씨 위치 설정</p>
-        <input
-          className="location-modal__input"
-          type="text"
-          placeholder="도시명 입력 (예: 서울, Busan, Tokyo)"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSave()}
-          autoFocus
-        />
-        {error && <p className="location-modal__error">{error}</p>}
-        <div className="location-modal__actions">
-          <button type="button" className="location-modal__cancel" onClick={onClose}>
-            취소
-          </button>
-          <button
-            type="button"
-            className="location-modal__save"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? "검색 중..." : "저장"}
-          </button>
-        </div>
+    <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "14px 14px 10px" }}>
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 500,
+          color: "rgba(255,255,255,0.88)",
+          letterSpacing: "0.02em",
+          marginBottom: 10,
+        }}
+      >
+        {date.getMonth() + 1}월 {date.getDate()}일
+        <span
+          style={{
+            marginLeft: 8,
+            fontSize: 10,
+            fontWeight: 400,
+            color: "rgba(255,255,255,0.35)",
+          }}
+        >
+          {dayTasks.length}개 일정
+        </span>
       </div>
+
+      {dayTasks.length === 0 ? (
+        <div
+          style={{
+            fontSize: 12,
+            color: "rgba(255,255,255,0.28)",
+            textAlign: "center",
+            padding: "14px 0",
+          }}
+        >
+          일정 없음
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          {dayTasks.map((task) => {
+            const pal = getPal(task);
+            const timeDisplay = parseTime(task.time);
+
+            return (
+              <div
+                key={task.occurrenceDate ? `${task.id}-${task.occurrenceDate}` : task.id}
+                onClick={() => onEdit(task)}
+                style={{
+                  borderRadius: 14,
+                  padding: "10px 12px",
+                  cursor: "pointer",
+                  background: `rgba(${hexToRgb(pal.bg)},0.12)`,
+                  border: `1px solid rgba(${hexToRgb(pal.bg)},0.28)`,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
+                }}
+              >
+                <div
+                  style={{
+                    width: 3,
+                    borderRadius: 999,
+                    alignSelf: "stretch",
+                    background: pal.bg,
+                    flexShrink: 0,
+                    minHeight: 20,
+                  }}
+                />
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: task.done ? "rgba(255,255,255,0.38)" : "#ffffff",
+                      textDecoration: task.done ? "line-through" : "none",
+                      lineHeight: 1.35,
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {task.text}
+                    {isRepeating(task.repeat) && (
+                      <span
+                        style={{
+                          marginLeft: 6,
+                          fontSize: 9,
+                          color: pal.text,
+                          opacity: 0.8,
+                          fontWeight: 500,
+                          padding: "1px 5px",
+                          borderRadius: 4,
+                          background: `rgba(${hexToRgb(pal.bg)},0.25)`,
+                        }}
+                      >
+                        루틴
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: 5, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 500,
+                        padding: "2px 7px",
+                        borderRadius: 999,
+                        background: `rgba(${hexToRgb(pal.bg)},0.2)`,
+                        color: pal.text,
+                      }}
+                    >
+                      {task.assignee}
+                    </span>
+
+                    {timeDisplay && (
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 3,
+                          fontSize: 10,
+                          color: "rgba(255,255,255,0.45)",
+                        }}
+                      >
+                        <Clock size={9} />
+                        {timeDisplay}
+                      </span>
+                    )}
+
+                    {task.location && (
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 3,
+                          fontSize: 10,
+                          color: "rgba(255,255,255,0.45)",
+                        }}
+                      >
+                        <MapPin size={9} />
+                        {task.location}
+                      </span>
+                    )}
+                  </div>
+
+                  {"memo" in task && task.memo && String(task.memo).trim() && (
+                    <div
+                      style={{
+                        marginTop: 7,
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 5,
+                        fontSize: 11,
+                        lineHeight: 1.45,
+                        color: "rgba(255,255,255,0.62)",
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      <StickyNote
+                        size={10}
+                        style={{
+                          marginTop: 3,
+                          flexShrink: 0,
+                          opacity: 0.7,
+                        }}
+                      />
+                      <span>{String(task.memo)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggle(task);
+                  }}
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    flexShrink: 0,
+                    marginTop: 1,
+                    border: task.done
+                      ? "1px solid rgba(201,168,76,0.45)"
+                      : "1px solid rgba(255,255,255,0.18)",
+                    background: task.done ? "rgba(201,168,76,0.18)" : "transparent",
+                    color: task.done ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0)",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  ✓
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 export function CalendarView({ tasks, onEdit, onToggle }: Props) {
-  const calendarRef = useRef<FullCalendar | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(() => getLocalDateString());
-  const [viewMode, setViewMode] = useState<ViewMode>("month");
-  const [weather, setWeather] = useState<WeatherData[]>([]);
-  const [location, setLocation] = useState<{ city: string; lat: number; lon: number } | null>(null);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
+  const [cursor, setCursor] = useState(() => new Date());
+  const [selected, setSelected] = useState<Date | null>(() => new Date());
 
-  useEffect(() => {
-    const stored = getStoredLocation();
-    if (stored) setLocation(stored);
-  }, []);
+  const currentMonth = cursor.getMonth();
+  const currentYear = cursor.getFullYear();
 
-  useEffect(() => {
-    if (!location) return;
-    fetchWeather(location.lat, location.lon).then(setWeather);
-  }, [location]);
+  const weeks = useMemo(() => getCalendarWeeks(cursor), [cursor]);
+  const rangeStart = weeks[0][0];
+  const rangeEnd = weeks[weeks.length - 1][6];
 
-  useEffect(() => {
-    const api = calendarRef.current?.getApi();
-    if (!api) return;
-    api.changeView(viewMode === "month" ? "dayGridMonth" : "timeGridWeek");
-  }, [viewMode]);
+  const allDisplayTasks = useMemo(() => {
+    const nonRoutine = tasks.filter((t) => !isRepeating(t.repeat));
+    const routineExpanded: Task[] = [];
 
-  const weatherMap = useMemo(() => {
-    const map: Record<string, WeatherData> = {};
-    for (const w of weather) map[w.date] = w;
-    return map;
-  }, [weather]);
+    tasks
+      .filter((t) => isRepeating(t.repeat))
+      .forEach((t) => {
+        const dates = expandRepeat(t.repeat, rangeStart, rangeEnd);
 
-  const events = useMemo(() => {
-    return tasks.map((task) => {
-      const start = toDateOnly(task.date_start);
-      const end = toDateOnly(task.date_end || task.date_start);
-      const startDate = parseLocalDate(start);
-      const endDate = parseLocalDate(end);
-      const diffDays = Math.round(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      const isRange = diffDays >= 1;
-      const colors = getAssigneeEventColors(task.assignee);
+        dates.forEach((d) => {
+          const ds = fmtDate(d);
 
-      return {
-        id: task.id,
-        title: task.text || "제목 없음",
-        start,
-        end:
-          end && end !== start
-            ? getLocalDateString(new Date(parseLocalDate(end).getTime() + 24 * 60 * 60 * 1000))
-            : undefined,
-        allDay: true,
-        display: "block" as const,
-        backgroundColor: colors.solid,
-        borderColor: "transparent",
-        textColor: "#fff",
-        extendedProps: {
-          task,
-          isRange,
-          eventBg: colors.bg,
-          eventShadow: colors.shadow,
-          eventSolid: colors.solid,
-        },
-      };
-    });
-  }, [tasks]);
+          let completed: string[] = [];
+          if (typeof t.completedDates === "string") {
+            try {
+              completed = JSON.parse(t.completedDates as unknown as string);
+            } catch {
+              completed = [];
+            }
+          } else if (Array.isArray(t.completedDates)) {
+            completed = t.completedDates;
+          }
 
-  const selectedTasks = useMemo(() => {
-    return tasks
-      .filter((task) => {
-        const start = toDateOnly(task.date_start);
-        const end = toDateOnly(task.date_end || task.date_start);
-        if (!start) return false;
-        if (!end) return isSameDate(start, selectedDate);
-        return start <= selectedDate && selectedDate <= end;
-      })
-      .sort((a, b) => {
-        if ((a.done ? 1 : 0) !== (b.done ? 1 : 0)) return (a.done ? 1 : 0) - (b.done ? 1 : 0);
-        return toDateOnly(a.date_start).localeCompare(toDateOnly(b.date_start));
+          routineExpanded.push({
+            ...t,
+            id: `${t.id}_${ds}`,
+            originalId: t.id,
+            date_start: ds,
+            date_end: ds,
+            done: completed.includes(ds),
+            occurrenceDate: ds,
+            completedDates: completed,
+          });
+        });
       });
-  }, [tasks, selectedDate]);
 
-  function handleDateClick(arg: DateClickArg) {
-    setSelectedDate(arg.dateStr);
+    return [...nonRoutine, ...routineExpanded];
+  }, [tasks, rangeStart, rangeEnd]);
+
+  const bars = useMemo(
+    () =>
+      buildBars(
+        allDisplayTasks.filter((t) => !isRepeating(t.repeat)),
+        weeks,
+      ),
+    [allDisplayTasks, weeks],
+  );
+
+  const dotMap = useMemo(
+    () => buildDots(allDisplayTasks.filter((t) => !isMultiDay(t))),
+    [allDisplayTasks],
+  );
+
+  const todayKey = fmtDate(new Date());
+
+  function handleDayClick(day: Date) {
+    setSelected((prev) => (prev && fmtDate(prev) === fmtDate(day) ? null : day));
   }
 
-  function handleEventClick(arg: EventClickArg) {
-    const task = arg.event.extendedProps.task as Task | undefined;
-    if (!task) return;
-    setSelectedDate(toDateOnly(arg.event.startStr));
-    onEdit(task);
-  }
+  const selectedDayTasks = useMemo(() => {
+    if (!selected) return [];
 
-  function goToday() {
-    const api = calendarRef.current?.getApi();
-    api?.today();
-    setSelectedDate(getLocalDateString());
-  }
+    return allDisplayTasks.filter((t) => {
+      const s = parseLocalDate(t.date_start);
+      const e = parseLocalDate(t.date_end || t.date_start);
+      if (!s) return false;
+      return selected >= s && selected <= (e ?? s);
+    });
+  }, [allDisplayTasks, selected]);
 
-  function handleLocationSave(city: string, lat: number, lon: number) {
-    const loc = { city, lat, lon };
-    setLocation(loc);
-    storeLocation(loc);
-    setShowLocationModal(false);
-  }
-
-  function renderEventContent(arg: EventContentArg) {
-    const isRange = !!arg.event.extendedProps.isRange;
-    const eventBg = arg.event.extendedProps.eventBg as string;
-    const eventShadow = arg.event.extendedProps.eventShadow as string;
-
-    return (
-      <div
-        className="calendar-event-chip"
-        style={{
-          width: isRange ? "calc(100% + 2px)" : "100%",
-          marginLeft: isRange ? -1 : 0,
-          minHeight: isRange ? 24 : 18,
-          padding: isRange ? "0 8px" : "0 6px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          borderRadius: isRange ? 999 : 10,
-          overflow: "hidden",
-          background: eventBg,
-          boxShadow: eventShadow,
-        }}
-      >
-        <span
-          className="calendar-event-chip__text"
-          style={{
-            display: "block",
-            width: "100%",
-            fontSize: isRange ? 9 : 8,
-            lineHeight: 1.05,
-            fontWeight: isRange ? 700 : 600,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            letterSpacing: "-0.03em",
-            color: "#fff",
-          }}
-        >
-          {arg.event.title}
-        </span>
-      </div>
-    );
-  }
-
-  function renderDayCellContent(arg: { date: Date; dayNumberText: string }) {
-    const dateStr = getLocalDateString(arg.date);
-    const w = weatherMap[dateStr];
-    const num = arg.date.getDate();
-    return (
-      <div className="fc-daycell-inner">
-        <span className="fc-daycell-num">{num}</span>
-        {w && (
-          <span className="fc-daycell-weather" title={`${w.temp}°C`}>
-            {getWeatherEmoji(w.weatherCode)}
-          </span>
-        )}
-      </div>
-    );
-  }
+  const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+  const MONTH_LABELS = [
+    "1월",
+    "2월",
+    "3월",
+    "4월",
+    "5월",
+    "6월",
+    "7월",
+    "8월",
+    "9월",
+    "10월",
+    "11월",
+    "12월",
+  ];
 
   return (
-    <section
-      className="calendar-view"
+    <div
       style={{
-        width: "100%",
-        maxWidth: "100%",
-        paddingLeft: isMobile ? 0 : undefined,
-        paddingRight: isMobile ? 0 : undefined,
+        borderRadius: 26,
+        background: "linear-gradient(180deg, rgba(10,15,26,0.98), rgba(5,9,16,0.98))",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 24px 48px rgba(0,0,0,0.35)",
+        overflow: "hidden",
       }}
     >
-      {showLocationModal && (
-        <LocationModal
-          onSave={handleLocationSave}
-          onClose={() => setShowLocationModal(false)}
-          initialCity={location?.city}
-        />
-      )}
-
       <div
-        className="calendar-shell"
         style={{
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
-          boxSizing: "border-box",
-          paddingLeft: isMobile ? 4 : undefined,
-          paddingRight: isMobile ? 4 : undefined,
-          borderRadius: isMobile ? 0 : undefined,
+          padding: "18px 18px 14px",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        <div className="calendar-topbar">
-          <div>
-            <p className="calendar-topbar__eyebrow">MONTHLY</p>
-            <h2 className="calendar-topbar__title">캘린더</h2>
+        <button
+          type="button"
+          onClick={() => setCursor(new Date(currentYear, currentMonth - 1, 1))}
+          style={navBtn}
+        >
+          <ChevronLeft size={15} />
+        </button>
+
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: 17,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.92)",
+              letterSpacing: "0.03em",
+            }}
+          >
+            {MONTH_LABELS[currentMonth]}
           </div>
-          <div className="calendar-topbar__actions">
-            <button
-              type="button"
-              className="calendar-weather-btn"
-              onClick={() => setShowLocationModal(true)}
-            >
-              {location ? `📍 ${location.city}` : "📍 위치"}
-            </button>
-            <button type="button" className="calendar-today-btn" onClick={goToday}>
-              오늘
-            </button>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.38)", marginTop: 1 }}>
+            {currentYear}년
           </div>
         </div>
 
-        <div className="calendar-tabs">
-          <button
-            type="button"
-            className={`calendar-tab${viewMode === "month" ? " is-active" : ""}`}
-            onClick={() => setViewMode("month")}
-          >
-            월간
-          </button>
-          <button
-            type="button"
-            className={`calendar-tab${viewMode === "week" ? " is-active" : ""}`}
-            onClick={() => setViewMode("week")}
-          >
-            주간
-          </button>
-        </div>
-
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          locale={koLocale}
-          locales={[koLocale]}
-          fixedWeekCount={false}
-          height="auto"
-          headerToolbar={{ left: "prev", center: "title", right: "next" }}
-          dayMaxEventRows={isMobile ? 4 : 3}
-          eventOrder="start,-duration,allDay,title"
-          moreLinkText={(count) => `+${count}`}
-          eventDisplay="block"
-          events={events}
-          dateClick={handleDateClick}
-          eventClick={handleEventClick}
-          eventContent={renderEventContent}
-          dayCellContent={renderDayCellContent}
-          dayHeaderFormat={{ weekday: "short" }}
-          titleFormat={{ year: "numeric", month: "long" }}
-          buttonText={{ today: "오늘" }}
-          slotMinTime="06:00:00"
-          slotMaxTime="24:00:00"
-          allDaySlot={true}
-          slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
-        />
+        <button
+          type="button"
+          onClick={() => setCursor(new Date(currentYear, currentMonth + 1, 1))}
+          style={navBtn}
+        >
+          <ChevronRight size={15} />
+        </button>
       </div>
 
-      <section
-        className="calendar-selected card"
-        style={{
-          width: "100%",
-          maxWidth: "100%",
-          marginTop: 12,
-          borderRadius: isMobile ? 18 : undefined,
-        }}
+      <div
+        style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", padding: "10px 10px 0" }}
       >
-        <div className="calendar-selected__head">
-          <div>
-            <p className="calendar-selected__eyebrow">SELECTED</p>
-            <h3 className="calendar-selected__title">{formatSelectedDate(selectedDate)}</h3>
-            {weatherMap[selectedDate] && (
-              <p className="calendar-selected__weather">
-                {getWeatherEmoji(weatherMap[selectedDate].weatherCode)}{" "}
-                {weatherMap[selectedDate].temp}°C
-              </p>
-            )}
+        {WEEKDAY_LABELS.map((d, i) => (
+          <div
+            key={d}
+            style={{
+              textAlign: "center",
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+              paddingBottom: 8,
+              color:
+                i === 0
+                  ? "rgba(255,120,120,0.75)"
+                  : i === 6
+                    ? "rgba(120,160,255,0.65)"
+                    : "rgba(255,255,255,0.42)",
+            }}
+          >
+            {d}
           </div>
-          <span className="calendar-selected__count">{selectedTasks.length}</span>
-        </div>
+        ))}
+      </div>
 
-        {selectedTasks.length > 0 ? (
-          <div className="section-stack">
-            {selectedTasks.map((task) => (
-              <CalendarTaskRow
-                key={task.id}
-                task={task}
-                typeLabel={getTaskTypeLabel(task)}
-                dateLabel={getDateRangeLabel(task)}
-                onEdit={onEdit}
-                onToggle={onToggle}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="empty-card card calendar-empty">
-            <p>선택한 날짜에 일정이 없어.</p>
-          </div>
-        )}
-      </section>
-    </section>
+      <div style={{ padding: "0 6px 8px" }}>
+        {weeks.map((week) => {
+          const weekKey = fmtDate(week[0]);
+          const weekBars = bars.filter((b) => b.weekKey === weekKey);
+          const maxRow = weekBars.length ? Math.max(...weekBars.map((b) => b.row)) : -1;
+          const barAreaH = maxRow >= 0 ? (maxRow + 1) * 20 + 4 : 0;
+
+          return (
+            <div key={weekKey} style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(7,1fr)",
+                  gap: 2,
+                  minHeight: 52,
+                }}
+              >
+                {week.map((day, ci) => {
+                  const key = fmtDate(day);
+                  const isToday = key === todayKey;
+                  const isSel = selected ? fmtDate(selected) === key : false;
+                  const isCurMon = day.getMonth() === currentMonth;
+                  const isSun = ci === 0;
+                  const isSat = ci === 6;
+                  const dots = (dotMap.get(key) ?? []).slice(0, 3);
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleDayClick(day)}
+                      style={{
+                        padding: "7px 2px 5px",
+                        cursor: "pointer",
+                        borderRadius: 10,
+                        border:
+                          isSel && !isToday
+                            ? "1px solid rgba(201,168,76,0.3)"
+                            : "1px solid transparent",
+                        background: isSel ? "rgba(201,168,76,0.09)" : "transparent",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 3,
+                        transition: "background 0.15s",
+                        minHeight: 52,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 999,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 12,
+                          fontWeight: isToday ? 600 : isCurMon ? 500 : 400,
+                          color: !isCurMon
+                            ? "rgba(255,255,255,0.2)"
+                            : isToday
+                              ? "#151515"
+                              : isSun
+                                ? "rgba(255,130,130,0.85)"
+                                : isSat
+                                  ? "rgba(130,170,255,0.8)"
+                                  : "#f0ece0",
+                          background: isToday ? "#e8a838" : "transparent",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {day.getDate()}
+                      </div>
+
+                      <div style={{ height: 6, display: "flex", alignItems: "center", gap: 2 }}>
+                        {dots.map((color, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              width: 4,
+                              height: 4,
+                              borderRadius: 999,
+                              background: color,
+                              opacity: isCurMon ? 1 : 0.35,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div style={{ position: "relative", height: barAreaH, margin: "2px 4px 0" }}>
+                {weekBars.map((bar) => {
+                  const pal = getPal(bar.task);
+
+                  return (
+                    <button
+                      key={`${bar.task.id}-${bar.weekKey}-${bar.row}`}
+                      type="button"
+                      onClick={() => onEdit(bar.task)}
+                      title={bar.task.text}
+                      style={{
+                        position: "absolute",
+                        left: `${(bar.startCol / 7) * 100}%`,
+                        width: `${((bar.endCol - bar.startCol + 1) / 7) * 100}%`,
+                        top: bar.row * 20 + 1,
+                        height: 16,
+                        border: "none",
+                        borderRadius: 999,
+                        padding: "0 6px",
+                        background: pal.bg,
+                        color: pal.text,
+                        fontSize: 8,
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        opacity: bar.task.done ? 0.4 : 1,
+                      }}
+                    >
+                      {bar.task.text}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {selected && (
+        <DayPanel date={selected} tasks={selectedDayTasks} onEdit={onEdit} onToggle={onToggle} />
+      )}
+    </div>
   );
 }
+
+const navBtn: React.CSSProperties = {
+  width: 34,
+  height: 34,
+  borderRadius: 12,
+  border: "1px solid rgba(255,255,255,0.09)",
+  background: "rgba(255,255,255,0.05)",
+  color: "rgba(255,255,255,0.8)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  transition: "all 0.2s",
+};
