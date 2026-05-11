@@ -202,6 +202,7 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [location, setLocation] = useState<{ city: string; lat: number; lon: number } | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
 
   useEffect(() => {
     const stored = getStoredLocation();
@@ -229,6 +230,28 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
     return tasks.map((task) => {
       const start = toDateOnly(task.date_start);
       const end = toDateOnly(task.date_end || task.date_start);
+
+      const startDate = parseLocalDate(start);
+      const endDate = parseLocalDate(end);
+      const diffDays = Math.round(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const isRange = diffDays >= 1;
+
+      let bg = "rgba(212, 160, 64, 0.92)";
+      let border = "rgba(212, 160, 64, 0.98)";
+
+      if (task.assignee === "민효") {
+        bg = "rgba(58, 140, 106, 0.88)";
+        border = "rgba(58, 140, 106, 0.96)";
+      } else if (task.assignee === "함께") {
+        bg = "rgba(124, 111, 204, 0.88)";
+        border = "rgba(124, 111, 204, 0.96)";
+      } else if (task.assignee === "데이트") {
+        bg = "rgba(224, 107, 154, 0.88)";
+        border = "rgba(224, 107, 154, 0.96)";
+      }
+
       return {
         id: task.id,
         title: task.text || "제목 없음",
@@ -238,7 +261,11 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
             ? getLocalDateString(new Date(parseLocalDate(end).getTime() + 24 * 60 * 60 * 1000))
             : undefined,
         allDay: true,
-        extendedProps: { task },
+        backgroundColor: bg,
+        borderColor: border,
+        textColor: "#fff",
+        classNames: [isRange ? "calendar-event-range" : "calendar-event-single"],
+        extendedProps: { task, isRange },
       };
     });
   }, [tasks]);
@@ -283,9 +310,37 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
   }
 
   function renderEventContent(arg: EventContentArg) {
+    const isRange = !!arg.event.extendedProps.isRange;
+
     return (
-      <div className="calendar-event-chip">
-        <span className="calendar-event-chip__text">{arg.event.title}</span>
+      <div
+        className="calendar-event-chip"
+        style={{
+          width: "100%",
+          minHeight: isRange ? 22 : 18,
+          padding: isRange ? "0 8px" : "0 6px",
+          display: "flex",
+          alignItems: "center",
+          borderRadius: isRange ? 999 : 10,
+          overflow: "hidden",
+        }}
+      >
+        <span
+          className="calendar-event-chip__text"
+          style={{
+            display: "block",
+            width: "100%",
+            fontSize: isRange ? 10 : 9,
+            lineHeight: 1.1,
+            fontWeight: isRange ? 700 : 600,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {arg.event.title}
+        </span>
       </div>
     );
   }
@@ -307,7 +362,15 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
   }
 
   return (
-    <section className="calendar-view">
+    <section
+      className="calendar-view"
+      style={{
+        width: "100%",
+        maxWidth: "100%",
+        paddingLeft: isMobile ? 0 : undefined,
+        paddingRight: isMobile ? 0 : undefined,
+      }}
+    >
       {showLocationModal && (
         <LocationModal
           onSave={handleLocationSave}
@@ -316,7 +379,18 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
         />
       )}
 
-      <div className="calendar-shell">
+      <div
+        className="calendar-shell"
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+          margin: 0,
+          boxSizing: "border-box",
+          paddingLeft: isMobile ? 6 : undefined,
+          paddingRight: isMobile ? 6 : undefined,
+          borderRadius: isMobile ? 0 : undefined,
+        }}
+      >
         <div className="calendar-topbar">
           <div>
             <p className="calendar-topbar__eyebrow">MONTHLY</p>
@@ -362,8 +436,9 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
           fixedWeekCount={false}
           height="auto"
           headerToolbar={{ left: "prev", center: "title", right: "next" }}
-          dayMaxEventRows={2}
+          dayMaxEventRows={isMobile ? 3 : 2}
           moreLinkText={(count) => `+${count}`}
+          eventDisplay="block"
           events={events}
           dateClick={handleDateClick}
           eventClick={handleEventClick}
@@ -379,7 +454,15 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
         />
       </div>
 
-      <section className="calendar-selected card">
+      <section
+        className="calendar-selected card"
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+          marginTop: 12,
+          borderRadius: isMobile ? 18 : undefined,
+        }}
+      >
         <div className="calendar-selected__head">
           <div>
             <p className="calendar-selected__eyebrow">SELECTED</p>
