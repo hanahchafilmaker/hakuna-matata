@@ -15,7 +15,7 @@ export const DAY_ORDER: DayCode[] = ["mon", "tue", "wed", "thu", "fri", "sat", "
 
 export const grid2: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "1fr",
   gap: 10,
 };
 
