@@ -863,3 +863,267 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ================= WEATHER WIDGET ================= */
+
+.weather-widget {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weather-widget__left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.weather-widget__date {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-soft);
+  letter-spacing: 0.01em;
+}
+
+.weather-widget__info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weather-widget__emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.weather-widget__temp {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.weather-widget__label {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.weather-widget__loading {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.weather-widget__location {
+  font-size: 11px;
+  color: var(--text-soft);
+  opacity: 0.6;
+  letter-spacing: 0.06em;
+  align-self: flex-end;
+}
+
+/* ================= SETTINGS SCREEN ================= */
+
+.settings-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-group {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-group__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-group__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.settings-group__desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.settings-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+/* D-Day list */
+
+.settings-dday-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-dday-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.settings-dday-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-dday-item__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.settings-dday-item__date {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.settings-dday-item__delete {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.settings-dday-item__delete:hover {
+  background: rgba(239,68,68,0.15);
+  color: #f87171;
+}
+
+/* D-Day add form */
+
+.settings-dday-add {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-dday-add__input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.settings-dday-add__input::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+
+.settings-dday-add__error {
+  margin: 0;
+  font-size: 12px;
+  color: #f87171;
+}
+
+.settings-dday-add__btn {
+  height: 42px;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.settings-dday-add__btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* Theme picker */
+
+.settings-themes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-theme-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  text-align: left;
+}
+
+.settings-theme-item.is-active {
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.07);
+}
+
+.settings-theme-item__swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.settings-theme-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-theme-item__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.settings-theme-item__desc {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.settings-theme-item__check {
+  font-size: 14px;
+  color: var(--text);
+  flex-shrink: 0;
+}

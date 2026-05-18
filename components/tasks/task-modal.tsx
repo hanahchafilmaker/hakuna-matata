@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -30,6 +30,7 @@ import {
 import {
   overlayStyle,
   sheetStyle,
+  handleBarStyle,
   headerStyle,
   headerTextWrapStyle,
   headerEyebrowStyle,
@@ -63,7 +64,6 @@ type Props = {
 
 function normalizeTask(task?: Partial<Task> | null): Partial<Task> & { _hasTime: boolean } {
   const rawTime = parseTime(task?.time);
-
   return {
     id: task?.id || "",
     text: task?.text || "",
@@ -103,17 +103,17 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
   }
 
   function toggleRepeatDay(day: string) {
-    setRepeatDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
+    setRepeatDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     if (!form.text?.trim()) {
       alert("일정 제목을 입력해줘.");
       return;
     }
-
     const payload: Partial<Task> = {
       ...form,
       text: form.text?.trim(),
@@ -122,7 +122,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
       time: hasTime ? parseTime(form.time) || "" : "",
       repeat: serializeRepeat(repeatDays as any),
     };
-
     setIsSubmitting(true);
     try {
       await onSave(payload);
@@ -134,23 +133,22 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
   return (
     <div onClick={onClose} style={overlayStyle}>
       <div onClick={(e) => e.stopPropagation()} style={sheetStyle}>
+        {/* 드래그 핸들 바 */}
+        <div style={handleBarStyle} />
+
         <div style={headerStyle}>
           <div style={headerTextWrapStyle}>
             <p style={headerEyebrowStyle}>{isEditMode ? "EDIT" : "NEW"}</p>
-
             <h3 style={headerTitleStyle}>{isEditMode ? "일정 수정" : "새 일정"}</h3>
-
             <div style={headerMetaStyle}>
               <span style={headerDotStyle(getTypeDotColor(form.type))} />
               <span style={headerMetaTextStyle}>
                 {TYPES.find((t) => t.value === form.type)?.label || "일반"}
               </span>
-
               <span style={headerDotStyle(getAssigneeDotColor(form.assignee))} />
               <span style={headerMetaTextStyle}>{form.assignee || "하나"}</span>
             </div>
           </div>
-
           <button type="button" onClick={onClose} style={iconBtnStyle} title="닫기">
             <X size={16} />
           </button>
@@ -160,16 +158,12 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
           <div style={bodyStyle}>
             <div style={titleBlockStyle}>
               <div style={titleLabelStyle}>제목</div>
-
               <textarea
                 value={form.text || ""}
                 onChange={(e) => updateField("text", e.target.value)}
-                rows={3}
+                rows={2}
                 placeholder="예: 병원 예약, 기획안 마감, 가족 외식"
-                style={{
-                  ...textareaStyle,
-                  minHeight: 78,
-                }}
+                style={{ ...textareaStyle, minHeight: 60 }}
               />
             </div>
 
@@ -181,9 +175,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                   style={selectStyle}
                 >
                   {ASSIGNEES.map((name) => (
-                    <option key={name} value={name} style={{ color: "#111" }}>
-                      {name}
-                    </option>
+                    <option key={name} value={name} style={{ color: "#111" }}>{name}</option>
                   ))}
                 </select>
               </FieldBlock>
@@ -195,9 +187,7 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                   style={selectStyle}
                 >
                   {TYPES.map((t) => (
-                    <option key={t.value} value={t.value} style={{ color: "#111" }}>
-                      {t.label}
-                    </option>
+                    <option key={t.value} value={t.value} style={{ color: "#111" }}>{t.label}</option>
                   ))}
                 </select>
               </FieldBlock>
@@ -236,7 +226,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                 >
                   {hasTime ? "시간 사용 중" : "시간 없음"}
                 </button>
-
                 {hasTime && (
                   <input
                     type="text"
@@ -263,13 +252,9 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
               <textarea
                 value={form.memo || ""}
                 onChange={(e) => updateField("memo", e.target.value)}
-                rows={4}
+                rows={3}
                 placeholder="간단한 메모, 준비물, 체크사항"
-                style={{
-                  ...textareaStyle,
-                  minHeight: 96,
-                  resize: "vertical",
-                }}
+                style={{ ...textareaStyle, minHeight: 72, resize: "vertical" }}
               />
             </FieldBlock>
 
@@ -288,7 +273,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
                     </button>
                   );
                 })}
-
                 {repeatDays.length > 0 && (
                   <button type="button" onClick={() => setRepeatDays([])} style={repeatResetStyle}>
                     초기화
@@ -315,7 +299,6 @@ export function TaskModal({ task, isOpen, onClose, onSave, isEditMode = false }:
             <button type="button" onClick={onClose} style={secondaryBtnStyle}>
               취소
             </button>
-
             <button
               type="submit"
               disabled={isSubmitting}

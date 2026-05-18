@@ -1,19 +1,24 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { TopHeader } from "@/components/layout/top-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { HomeScreen } from "@/components/home/home-screen";
-import { MoreScreen } from "@/components/more/more-screen";
+import { SettingsScreen } from "@/components/settings/settings-screen";
+import type { DdayItem, BgTheme } from "@/components/settings/settings-screen";
 import { AppBackground } from "@/components/background/app-background";
 import { CalendarView } from "@/components/calendar/calendar-view";
 import { TaskModal } from "@/components/tasks/task-modal";
 import { useAppView } from "@/hooks/use-app-view";
 import { useTasks } from "@/hooks/use-tasks";
 import { todayStr } from "@/lib/dateUtils";
-import { isRepeating } from "@/lib/repeatUtils";
 import type { Task } from "@/components/tasks/task-card";
+
+const DEFAULT_DDAYS: DdayItem[] = [
+  { label: "금연", date: "2024-11-23" },
+  { label: "민효와 처음 만난 날", date: "2024-06-30" },
+];
 
 export default function Page() {
   const { tasks, addTask, updateTask, deleteTask, toggleTask } = useTasks();
@@ -24,23 +29,20 @@ export default function Page() {
   const [isEdit, setIsEdit] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // 설정: D-Day 목록
+  const [ddayItems, setDdayItems] = useState<DdayItem[]>(DEFAULT_DDAYS);
+  // 설정: 배경 테마
+  const [bgTheme, setBgTheme] = useState<BgTheme>("night");
+
   const routines = useMemo(() => {
     const todayNum = new Date().getDay();
     const dayMap: Record<string, number> = {
-      sun: 0,
-      mon: 1,
-      tue: 2,
-      wed: 3,
-      thu: 4,
-      fri: 5,
-      sat: 6,
+      sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
     };
-
     return tasks.filter((task) => {
       const repeat = (task.repeat || "none").toLowerCase();
       if (repeat === "none") return false;
       if (repeat === "daily") return true;
-
       return repeat
         .split(",")
         .map((item: string) => item.trim())
@@ -73,7 +75,6 @@ export default function Page() {
 
   async function handleSave(form: Partial<Task>) {
     if (!form.text?.trim()) return;
-
     setSaving(true);
     try {
       if (isEdit && form.id) {
@@ -90,30 +91,18 @@ export default function Page() {
   }
 
   async function handleToggle(task: Task) {
-    try {
-      await toggleTask(task);
-    } catch (error) {
-      console.error(error);
-    }
+    try { await toggleTask(task); } catch (e) { console.error(e); }
   }
 
   async function handleDelete(id: string) {
     if (!confirm("이 일정을 삭제할까요?")) return;
-
-    try {
-      await deleteTask(id);
-    } catch (error) {
-      console.error(error);
-    }
-
-    if (draft?.id === id) {
-      setModalOpen(false);
-    }
+    try { await deleteTask(id); } catch (e) { console.error(e); }
+    if (draft?.id === id) setModalOpen(false);
   }
 
   return (
     <>
-      <AppBackground />
+      <AppBackground theme={bgTheme} />
 
       <AppShell>
         <div className="app-main">
@@ -123,6 +112,7 @@ export default function Page() {
             <HomeScreen
               tasks={tasks}
               routines={routines}
+              ddayItems={ddayItems}
               onEdit={openEdit}
               onToggle={handleToggle}
               onDelete={handleDelete}
@@ -138,13 +128,12 @@ export default function Page() {
             />
           )}
 
-          {view === "more" && (
-            <MoreScreen
-              tasks={tasks}
-              routines={routines}
-              onEdit={openEdit}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
+          {view === "settings" && (
+            <SettingsScreen
+              ddayItems={ddayItems}
+              onDdayChange={setDdayItems}
+              currentTheme={bgTheme}
+              onThemeChange={setBgTheme}
             />
           )}
         </div>
@@ -166,4 +155,3 @@ export default function Page() {
     </>
   );
 }
-

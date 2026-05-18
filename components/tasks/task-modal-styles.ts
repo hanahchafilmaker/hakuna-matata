@@ -1,36 +1,49 @@
 import type { CSSProperties } from "react"
 import type { Task } from "@/components/tasks/task-card"
 
+// 반투명 오버레이 — 하단 정렬
 export const overlayStyle: CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 999,
   background: "rgba(0,0,0,0.52)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
+  backdropFilter: "blur(10px)",
+  WebkitBackdropFilter: "blur(10px)",
   display: "flex",
   alignItems: "flex-end",
   justifyContent: "center",
-  padding: "12px 12px calc(12px + env(safe-area-inset-bottom))",
 }
 
+// 바텀 시트 — 하단에 완전히 붙음, 모서리는 위만 둥글게
 export const sheetStyle: CSSProperties = {
   width: "100%",
   maxWidth: 430,
-  borderRadius: 26,
+  borderRadius: "24px 24px 0 0",
   overflow: "hidden",
-  background: "linear-gradient(180deg, rgba(11,16,28,0.98), rgba(8,12,22,0.99))",
+  background: "linear-gradient(180deg, rgba(11,16,28,0.99), rgba(7,11,22,1))",
   border: "1px solid rgba(255,255,255,0.07)",
-  boxShadow: "0 24px 50px rgba(0,0,0,0.38)",
+  borderBottom: "none",
+  boxShadow: "0 -12px 40px rgba(0,0,0,0.4)",
+  // safe-area 대응
+  paddingBottom: "env(safe-area-inset-bottom)",
 }
 
 export const headerStyle: CSSProperties = {
-  padding: "14px 16px 12px",
+  padding: "16px 18px 12px",
   borderBottom: "1px solid rgba(255,255,255,0.06)",
   display: "flex",
   alignItems: "flex-start",
   justifyContent: "space-between",
   gap: 12,
+}
+
+// 드래그 핸들 (시각적 힌트)
+export const handleBarStyle: CSSProperties = {
+  width: 36,
+  height: 4,
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.18)",
+  margin: "10px auto 0",
 }
 
 export const headerTextWrapStyle: CSSProperties = {
@@ -74,13 +87,15 @@ export const headerMetaTextStyle: CSSProperties = {
   color: "rgba(255,255,255,0.58)",
 }
 
+// 스크롤 영역 — 뷰포트 60% 이내, 스크롤 필요시만 생김
 export const bodyStyle: CSSProperties = {
-  maxHeight: "72vh",
+  maxHeight: "60vh",
   overflowY: "auto",
-  padding: "14px 16px 16px",
+  padding: "14px 18px 16px",
   display: "flex",
   flexDirection: "column",
   gap: 14,
+  WebkitOverflowScrolling: "touch",
 }
 
 export const titleBlockStyle: CSSProperties = {
@@ -174,7 +189,7 @@ export const doneDescStyle: CSSProperties = {
 }
 
 export const footerStyle: CSSProperties = {
-  padding: "12px 16px 16px",
+  padding: "12px 18px 16px",
   borderTop: "1px solid rgba(255,255,255,0.06)",
   display: "flex",
   gap: 8,
@@ -182,14 +197,10 @@ export const footerStyle: CSSProperties = {
 
 export function getTypeDotColor(type?: Task["type"]) {
   switch (type) {
-    case "ui":
-      return "#ef6868"
-    case "nui":
-      return "#d4af37"
-    case "uni":
-      return "#6ea8ff"
-    default:
-      return "rgba(255,255,255,0.35)"
+    case "ui": return "#ef6868"
+    case "nui": return "#d4af37"
+    case "uni": return "#6ea8ff"
+    default: return "rgba(255,255,255,0.35)"
   }
 }
 
