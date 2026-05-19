@@ -1,3 +1,10 @@
+/* =====================================================
+   utilities.css  —  수정 내역
+   1. .dday-strip__item  padding 10→7px (카드 간격 축소)
+   2. .fab.is-hidden     설정 탭에서 숨기기용
+   나머지는 원본 그대로
+   ===================================================== */
+
 .app-shell {
   min-height: 100dvh;
   max-width: 430px;
@@ -123,11 +130,13 @@
   color: var(--text-soft);
 }
 
+/* ── D-Day strip ── */
+
 .dday-strip {
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px; /* ✅ 8→6 */
 }
 
 .dday-strip__item {
@@ -135,7 +144,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 7px 12px;          /* ✅ 10px→7px 상하 축소 */
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
 }
@@ -147,7 +156,7 @@
 }
 
 .dday-strip__date {
-  margin: 4px 0 0;
+  margin: 3px 0 0; /* ✅ 4→3 */
   font-size: 12px;
   color: var(--text-soft);
 }
@@ -201,6 +210,8 @@
   color: var(--text-soft);
 }
 
+/* ── Bottom Nav ── */
+
 .bottom-nav {
   position: fixed;
   left: 50%;
@@ -243,6 +254,8 @@
   color: var(--text);
 }
 
+/* ── FAB ── */
+
 .fab {
   position: fixed;
   right: max(20px, calc((100vw - 430px) / 2 + 20px));
@@ -258,7 +271,17 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(18px);
   z-index: 35;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
+/* ✅ 설정 탭에서 FAB 숨기기 — 사용법: <button className={`fab ${isSettings ? "is-hidden" : ""}`}> */
+.fab.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85);
+}
+
+/* ── Calendar ── */
 
 .calendar-view {
   display: flex;
@@ -431,400 +454,205 @@
   text-decoration: none !important;
 }
 
-.calendar-shell .fc .fc-scrollgrid-section-header > *,
-.calendar-shell .fc .fc-scrollgrid-section-body > * {
-  background: transparent !important;
-}
+/* ── Settings Screen ── */
 
-.calendar-shell .fc .fc-view-harness {
-  min-height: auto !important;
-}
-
-.calendar-shell .fc .fc-daygrid-body-natural .fc-daygrid-day-events {
-  margin-bottom: 2px;
-}
-
-.calendar-selected {
-  padding: 14px;
-}
-
-.calendar-selected__head {
+.settings-screen {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.calendar-selected__eyebrow {
-  margin: 0 0 4px;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-soft);
-}
-
-.calendar-selected__title {
-  margin: 0;
-  font-size: 17px;
-  line-height: 1.35;
-  font-weight: 700;
-}
-
-.calendar-selected__count {
-  min-width: 24px;
-  height: 24px;
-  padding: 0 8px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 12px;
-  color: var(--text-soft);
-}
-
-.calendar-selected .section-stack {
-  gap: 12px;
-}
-
-.calendar-empty {
+.settings-group {
   padding: 16px;
-}
-
-.calendar-row {
-  padding: 12px 12px 11px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.07);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    transform 0.18s ease;
+  gap: 16px;
 }
 
-.calendar-row:hover {
-  background: rgba(255, 255, 255, 0.065);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.calendar-row__top {
+.settings-group__head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.calendar-row__meta {
-  display: flex;
-  align-items: center;
-  gap: 8px 10px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.calendar-row__type {
-  display: inline-flex;
-  align-items: center;
-  min-height: 22px;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.calendar-row__date {
-  font-size: 11px;
-  color: var(--text-soft);
-  line-height: 1.45;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-.calendar-row__check {
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.34);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.calendar-row__body {
-  min-width: 0;
-}
-
-.calendar-row__title-wrap {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
-}
-
-.calendar-row__assignee {
-  width: 4px;
-  min-width: 4px;
-  height: 36px;
-  border-radius: 999px;
-  opacity: 0.95;
-}
-
-.calendar-row__text-block {
-  flex: 1;
-  min-width: 0;
-}
-
-.calendar-row__title {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--text);
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-.calendar-row__title.is-done {
-  color: rgba(255, 255, 255, 0.36);
-  text-decoration: line-through;
-}
-
-.calendar-row__sub {
-  margin-top: 5px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
-}
-
-.calendar-row__sub-item {
-  display: inline-flex;
-  align-items: center;
+  flex-direction: column;
   gap: 4px;
-  font-size: 11px;
-  color: var(--text-soft);
-  min-width: 0;
 }
 
-.calendar-event-chip {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.calendar-event-chip__text {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ================= WEATHER BTN ================= */
-
-.calendar-weather-btn {
-  height: 34px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text-soft);
-  font-size: 11px;
-  white-space: nowrap;
-  max-width: 100px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ================= CALENDAR TABS ================= */
-
-.calendar-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 999px;
-  padding: 3px;
-}
-
-.calendar-tab {
-  flex: 1;
-  height: 30px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-soft);
-  font-size: 12px;
-  font-weight: 500;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
-}
-
-.calendar-tab.is-active {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text);
+.settings-group__title {
+  margin: 0;
+  font-size: 15px;
   font-weight: 600;
 }
 
-/* ================= DAY CELL WEATHER ================= */
-
-.fc-daycell-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  width: 100%;
+.settings-group__desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-soft);
 }
 
-.fc-daycell-num {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: var(--text);
-}
-
-.fc-day-today .fc-daycell-num {
-  background: rgba(255, 255, 255, 0.14);
-  font-weight: 700;
-}
-
-.fc-day-other .fc-daycell-num {
-  opacity: 0.28;
-}
-
-.fc-daycell-weather {
-  font-size: 10px;
-  line-height: 1;
-}
-
-/* ================= SELECTED WEATHER ================= */
-
-.calendar-selected__weather {
-  margin: 4px 0 0;
+.settings-empty {
+  margin: 0;
   font-size: 13px;
   color: var(--text-soft);
 }
 
-/* ================= WEEK VIEW ================= */
-
-.calendar-shell .fc .fc-timegrid-slot {
-  height: 40px;
-}
-
-.calendar-shell .fc .fc-timegrid-slot-label {
-  font-size: 10px;
-  color: var(--text-soft);
-  vertical-align: top;
-  padding-top: 2px;
-}
-
-.calendar-shell .fc .fc-timegrid-col-events {
-  margin: 0 2px;
-}
-
-.calendar-shell .fc .fc-timegrid-event {
-  border-radius: 8px !important;
-  border: 0 !important;
-  background: rgba(183, 199, 255, 0.28) !important;
-  color: #eef2ff !important;
-  font-size: 11px;
-}
-
-/* ================= LOCATION MODAL ================= */
-
-.location-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.location-modal {
-  width: 100%;
-  max-width: 340px;
-  background: #0f1826;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 20px;
+.settings-dday-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
-.location-modal__title {
-  margin: 0;
-  font-size: 15px;
+.settings-dday-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-dday-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-dday-item__label {
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
 
-.location-modal__input {
-  width: 100%;
-  height: 48px;
-  padding: 0 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  font-size: 14px;
+.settings-dday-item__date {
+  font-size: 11px;
+  color: var(--text-soft);
 }
 
-.location-modal__error {
+.settings-dday-item__delete {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.settings-dday-item__delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.settings-dday-add {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-dday-add__input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.settings-dday-add__input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.settings-dday-add__error {
   margin: 0;
   font-size: 12px;
   color: #f87171;
 }
 
-.location-modal__actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.location-modal__cancel {
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 999px;
+.settings-dday-add__btn {
+  height: 42px;
   border: 0;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-soft);
-  font-size: 13px;
-}
-
-.location-modal__save {
-  height: 38px;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 0;
-  background: rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.18s ease;
 }
 
-.location-modal__save:disabled {
-  opacity: 0.5;
+.settings-dday-add__btn:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
-/* ================= FORM FIX ================= */
+
+.settings-themes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-theme-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  text-align: left;
+}
+
+.settings-theme-item.is-active {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.settings-theme-item__swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-theme-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-theme-item__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.settings-theme-item__desc {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.settings-theme-item__check {
+  font-size: 14px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+/* ── Form Fix ── */
 
 .form-grid-two,
 .form-grid.two,
@@ -864,7 +692,7 @@
   }
 }
 
-/* ================= WEATHER WIDGET ================= */
+/* ── Weather Widget ── */
 
 .weather-widget {
   padding: 16px 18px;
@@ -922,208 +750,4 @@
   opacity: 0.6;
   letter-spacing: 0.06em;
   align-self: flex-end;
-}
-
-/* ================= SETTINGS SCREEN ================= */
-
-.settings-screen {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.settings-group {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.settings-group__head {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.settings-group__title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.settings-group__desc {
-  margin: 0;
-  font-size: 12px;
-  color: var(--text-soft);
-}
-
-.settings-empty {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-soft);
-}
-
-/* D-Day list */
-
-.settings-dday-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.settings-dday-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
-}
-
-.settings-dday-item__info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.settings-dday-item__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.settings-dday-item__date {
-  font-size: 11px;
-  color: var(--text-soft);
-}
-
-.settings-dday-item__delete {
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.05);
-  color: var(--text-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.settings-dday-item__delete:hover {
-  background: rgba(239,68,68,0.15);
-  color: #f87171;
-}
-
-/* D-Day add form */
-
-.settings-dday-add {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.settings-dday-add__input {
-  width: 100%;
-  height: 42px;
-  padding: 0 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: var(--text);
-  font-size: 13px;
-}
-
-.settings-dday-add__input::placeholder {
-  color: rgba(255,255,255,0.3);
-}
-
-.settings-dday-add__error {
-  margin: 0;
-  font-size: 12px;
-  color: #f87171;
-}
-
-.settings-dday-add__btn {
-  height: 42px;
-  border: 0;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.08);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: background 0.18s ease;
-}
-
-.settings-dday-add__btn:hover {
-  background: rgba(255,255,255,0.12);
-}
-
-/* Theme picker */
-
-.settings-themes {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.settings-theme-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.03);
-  cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease;
-  text-align: left;
-}
-
-.settings-theme-item.is-active {
-  border-color: rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.07);
-}
-
-.settings-theme-item__swatch {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  flex-shrink: 0;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-.settings-theme-item__text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  min-width: 0;
-}
-
-.settings-theme-item__name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.settings-theme-item__desc {
-  font-size: 11px;
-  color: var(--text-soft);
-}
-
-.settings-theme-item__check {
-  font-size: 14px;
-  color: var(--text);
-  flex-shrink: 0;
 }

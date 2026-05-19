@@ -29,9 +29,7 @@ export default function Page() {
   const [isEdit, setIsEdit] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // 설정: D-Day 목록
   const [ddayItems, setDdayItems] = useState<DdayItem[]>(DEFAULT_DDAYS);
-  // 설정: 배경 테마
   const [bgTheme, setBgTheme] = useState<BgTheme>("night");
 
   const routines = useMemo(() => {
@@ -102,7 +100,8 @@ export default function Page() {
 
   return (
     <>
-      <AppBackground theme={bgTheme} />
+      {/* ✅ 수정 1: theme prop 제거 — AppBackground가 이벤트로 직접 처리 */}
+      <AppBackground />
 
       <AppShell>
         <div className="app-main">
@@ -138,7 +137,13 @@ export default function Page() {
           )}
         </div>
 
-        <button type="button" className="fab" onClick={openAdd} aria-label="일정 추가">
+        {/* ✅ 수정 2: 설정 탭에서 FAB 숨김 */}
+        <button
+          type="button"
+          className={`fab ${view === "settings" ? "is-hidden" : ""}`}
+          onClick={openAdd}
+          aria-label="일정 추가"
+        >
           +
         </button>
 
