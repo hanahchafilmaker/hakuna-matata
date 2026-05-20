@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { getOCRWorker } from "@/lib/ocrWorker";
 import { hashBuffer, getFromCache, setToCache } from "@/lib/ocrCache";
 import { parseCalendarText } from "@/lib/parseCalendarText";
@@ -9,7 +10,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const OCR_TIMEOUT_MS = 15_000;
 
 export async function POST(req: NextRequest) {
-  const requestId = crypto.randomUUID();
+  const requestId = randomUUID();
 
   try {
     const body = await req.json();
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. cache
-    const key = hashBuffer(buffer);
+    const key = `${hashBuffer(buffer)}:${year}:${month}`;
     const cached = getFromCache(key);
 
     if (cached) {
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4. OCR worker
+    // 4. OCR
     const worker = await getOCRWorker();
 
     const recognizePromise = worker.recognize(buffer);
@@ -77,10 +78,12 @@ export async function POST(req: NextRequest) {
 
     const text = result.data.text;
 
+    console.log("[OCR TEXT]", text);
+
     // 5. parse
     const events = parseCalendarText(text, year, month);
 
-    // 6. cache save (🔥 ts 필수)
+    // 6. cache save
     setToCache(key, {
       ts: Date.now(),
       events,
@@ -97,7 +100,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: "OCR failed",
-        detail: err.message,
+        detail: err?.message ?? "unknown error",
       },
       { status: 500 }
     );
