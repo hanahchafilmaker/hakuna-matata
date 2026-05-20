@@ -2,6 +2,8 @@
 
 import type { Task } from "@/components/tasks/task-card"
 import { TaskCard } from "@/components/tasks/task-card"
+import { MemoWidget } from "@/features/memo/components/MemoWidget"
+import { OCRUploadButton } from "@/features/ocr/components/OCRUploadButton"
 
 export function MoreScreen({
   tasks,
@@ -20,8 +22,25 @@ export function MoreScreen({
   const doneTasks = tasks.filter((task) => task.done).slice(0, 4)
   const visibleRoutines = routines.slice(0, 6)
 
+  // Current year and month for OCR button
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+
   return (
     <section className="more-screen">
+      {/* [추가] 더보기 화면에서도 오늘 적어둔 생각들을 가장 먼저 마주하도록 배치합니다 */}
+      <MemoWidget />
+      {/* OCR tool */}
+      <div className="more-group card">
+        <div className="more-group__head">
+          <h3 className="more-group__title">도구</h3>
+          <p className="more-group__desc">사진으로 일정 등록</p>
+        </div>
+        <div className="section-stack">
+          <OCRUploadButton year={year} month={month} />
+        </div>
+      </div>
       <div className="more-group card">
         <div className="more-group__head">
           <div>

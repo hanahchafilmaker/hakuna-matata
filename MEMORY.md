@@ -1,0 +1,2 @@
+- [Feedback: OCR implementation improvements](feedback_ocr_improvements.md) — User suggested separating upload/parsing from saving, improving parseCalendarText look-ahead, fixing saved count, changing assignee to '함께', adding 'ocr' type, and allowing user edit in preview.
+- [Project: Memo widget and OCR features added](project_memo_ocr_features.md) — Added memo widget to home and more screens, OCR upload button to more screen, OCR preview modal, OCR parsing utility, API route for OCR processing, and Supabase storage integration for OCR events.

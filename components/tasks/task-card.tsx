@@ -10,7 +10,7 @@ export interface Task {
   date_end?: string;
   time?: string;
   assignee: "하나" | "민효" | "함께" | "데이트";
-  type: "ui" | "nui" | "uni" | "nuni" | "routine";
+  type: "ui" | "nui" | "uni" | "nuni" | "routine" | "ocr";
   done: boolean;
   repeat?: string;
   location?: string;

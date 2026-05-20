@@ -13,7 +13,7 @@ export type TaskRow = {
   id: string
   text: string
   assignee: string
-  type: 'ui' | 'nui' | 'uni'
+  type: 'ui' | 'nui' | 'uni' | 'ocr'
   date_start: string
   date_end: string
   time: string

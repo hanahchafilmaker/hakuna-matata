@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Clock, MapPin, StickyNote } from "lucide-rea
 import type { Task } from "@/components/tasks/task-card";
 import { parseLocalDate, fmtDate, getCalendarWeeks, diffDays, parseTime } from "@/lib/dateUtils";
 import { expandRepeat, isRepeating } from "@/lib/repeatUtils";
+import { OCRUploadButton } from "@/features/ocr/components/OCRUploadButton";
 
 type Props = {
   tasks: Task[];
@@ -485,13 +486,19 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setCursor(new Date(currentYear, currentMonth + 1, 1))}
-          style={navBtn}
-        >
-          <ChevronRight size={15} />
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={() => setCursor(new Date(currentYear, currentMonth + 1, 1))}
+            style={navBtn}
+          >
+            <ChevronRight size={15} />
+          </button>
+          <OCRUploadButton
+            year={currentYear}
+            month={currentMonth + 1}
+          />
+        </div>
       </div>
 
       <div
