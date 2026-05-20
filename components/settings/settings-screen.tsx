@@ -10,31 +10,31 @@ const THEMES = [
   {
     id: "night",
     label: "밤하늘",
-    desc: "기본 · 딥 네이비",
-    gradient: "linear-gradient(135deg, #070b14 0%, #0d1630 100%)",
+    desc: "기본",
+    gradient: "linear-gradient(135deg,#070b14,#0d1630)",
   },
   {
     id: "dusk",
     label: "황혼",
-    desc: "노을 · 따뜻한 느낌",
-    gradient: "linear-gradient(135deg, #1a0a0f 0%, #2d1020 50%, #0d1020 100%)",
+    desc: "노을",
+    gradient: "linear-gradient(135deg,#1a0a0f,#2d1020)",
   },
   {
     id: "forest",
     label: "숲",
     desc: "자연",
-    gradient: "linear-gradient(135deg, #051208 0%, #0c2018 50%, #070b14 100%)",
+    gradient: "linear-gradient(135deg,#051208,#0c2018)",
   },
   {
     id: "ocean",
     label: "심해",
-    desc: "청록",
-    gradient: "linear-gradient(135deg, #040d1a 0%, #081828 50%, #070b14 100%)",
+    desc: "바다",
+    gradient: "linear-gradient(135deg,#040d1a,#081828)",
   },
 ];
 
 export function SettingsScreen({
-  ddayItems,
+  ddayItems = [],
   onDdayChange,
   currentTheme,
   onThemeChange,
@@ -48,27 +48,23 @@ export function SettingsScreen({
   const [newDate, setNewDate] = useState("");
   const [addError, setAddError] = useState("");
 
-  // OCR states
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState("");
   const [scanSuccess, setScanSuccess] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleThemeClick(theme: BgTheme) {
-    localStorage.setItem("hakuna-theme", theme);
-    onThemeChange(theme);
-  }
-
+  // ─────────────────────────────
+  // D-DAY
+  // ─────────────────────────────
   function handleAdd() {
-    if (!newLabel.trim()) return setAddError("이름을 입력해줘.");
-    if (!newDate) return setAddError("날짜를 입력해줘.");
-    if (ddayItems.length >= 6) return setAddError("최대 6개까지 가능.");
+    if (!newLabel.trim()) return setAddError("이름 입력");
+    if (!newDate) return setAddError("날짜 입력");
 
     onDdayChange([
       ...ddayItems,
       {
-        id: crypto.randomUUID(),
+        id: crypto.randomUUID?.() ?? Date.now().toString(),
         label: newLabel.trim(),
         date: newDate,
       },
@@ -83,11 +79,24 @@ export function SettingsScreen({
     onDdayChange(ddayItems.filter((i) => i.id !== id));
   }
 
-  function handleScanClick() {
+  // ─────────────────────────────
+  // THEME
+  // ─────────────────────────────
+  function handleThemeClick(theme: BgTheme) {
+    localStorage.setItem("hakuna-theme", theme);
+    onThemeChange(theme);
+  }
+
+  // ─────────────────────────────
+  // OCR
+  // ─────────────────────────────
+  function openFilePicker() {
     fileInputRef.current?.click();
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -110,26 +119,24 @@ export function SettingsScreen({
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "scan failed");
+        const err = await safeJson(res);
+        throw new Error(err?.error || "scan failed");
       }
 
       const data = await res.json();
 
       if (data.events?.length > 0) {
         const newItems = data.events.map((e: any) => ({
-          id: crypto.randomUUID(),
+          id: crypto.randomUUID?.() ?? Date.now().toString(),
           label: e.title || "스캔 일정",
           date: e.date,
         }));
 
         onDdayChange([...ddayItems, ...newItems]);
 
-        setScanSuccess(
-          `스캔 완료! ${newItems.length}개 일정 추가됨`
-        );
+        setScanSuccess(`완료: ${newItems.length}개 일정 추가`);
       } else {
-        setScanSuccess("일정이 감지되지 않았습니다.");
+        setScanSuccess("감지된 일정 없음");
       }
     } catch (err: any) {
       setScanError(err.message || "스캔 실패");
@@ -143,13 +150,23 @@ export function SettingsScreen({
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => {
+      reader.onload = () =>
         resolve((reader.result as string).split(",")[1]);
-      };
       reader.onerror = reject;
     });
   }
 
+  async function safeJson(res: Response) {
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  // ─────────────────────────────
+  // UI
+  // ─────────────────────────────
   return (
     <section className="settings-screen">
 
@@ -177,7 +194,7 @@ export function SettingsScreen({
           onChange={(e) => setNewDate(e.target.value)}
         />
 
-        {addError && <p>{addError}</p>}
+        {addError && <p style={{ color: "red" }}>{addError}</p>}
 
         <button onClick={handleAdd}>
           <Plus size={14} /> 추가
@@ -198,11 +215,11 @@ export function SettingsScreen({
         ))}
       </div>
 
-      {/* SCAN */}
+      {/* OCR SCAN */}
       <div className="settings-group card">
         <h3>우리집 달력</h3>
 
-        <button onClick={handleScanClick}>
+        <button onClick={openFilePicker}>
           {scanning ? "스캔 중..." : "📷 스캔하기"}
         </button>
 
