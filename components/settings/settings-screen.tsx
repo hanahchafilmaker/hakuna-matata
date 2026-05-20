@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { useOcr } from "@/features/ocr/useOcr";
 
 export type DdayItem = { id: string; label: string; date: string };
 export type BgTheme = "night" | "dusk" | "forest" | "ocean";
@@ -48,29 +49,36 @@ export function SettingsScreen({
   const [newDate, setNewDate] = useState("");
   const [addError, setAddError] = useState("");
 
-  // OCR state
-  const [scanning, setScanning] = useState(false);
-  const [scanError, setScanError] = useState("");
-  const [scanSuccess, setScanSuccess] = useState("");
+  // ─── OCR: useOcr 훅으로 통일 ─────────────────────────────
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { status: ocrStatus, progressMsg, error: ocrError, inputRef, openPicker, handleFileChange } =
+    useOcr(currentYear, currentMonth, (events) => {
+      if (events.length === 0) return;
 
-  // ─────────────────────────────
-  // D-DAY
-  // ─────────────────────────────
+      // OcrEvent → DdayItem 변환 (settings-screen은 D-Day 목록에 저장)
+      const newItems: DdayItem[] = events.map((e, i) => ({
+        id: `ocr-${Date.now()}-${i}`,
+        label: e.title || "스캔 일정",
+        date: e.date,
+      }));
+
+      onDdayChange([...ddayItems, ...newItems]);
+    });
+
+  const isScanning = ocrStatus !== "idle" && ocrStatus !== "done" && ocrStatus !== "error";
+
+  // ─── D-DAY ───────────────────────────────────────────────
+
   function handleAdd() {
     if (!newLabel.trim()) return setAddError("이름을 입력해줘.");
     if (!newDate) return setAddError("날짜를 입력해줘.");
-    if (ddayItems.length >= 6)
-      return setAddError("최대 6개까지 추가할 수 있어.");
+    if (ddayItems.length >= 6) return setAddError("최대 6개까지 추가할 수 있어.");
 
     onDdayChange([
       ...ddayItems,
-      {
-        id: crypto.randomUUID(),
-        label: newLabel.trim(),
-        date: newDate,
-      },
+      { id: crypto.randomUUID(), label: newLabel.trim(), date: newDate },
     ]);
 
     setNewLabel("");
@@ -82,88 +90,15 @@ export function SettingsScreen({
     onDdayChange(ddayItems.filter((item) => item.id !== id));
   }
 
-  // ─────────────────────────────
-  // THEME
-  // ─────────────────────────────
+  // ─── THEME ───────────────────────────────────────────────
+
   function handleThemeClick(theme: BgTheme) {
     localStorage.setItem("hakuna-theme", theme);
     onThemeChange(theme);
   }
 
-  // ─────────────────────────────
-  // OCR (핵심 추가 기능)
-  // ─────────────────────────────
-  function openFilePicker() {
-    fileInputRef.current?.click();
-  }
+  // ─── UI ──────────────────────────────────────────────────
 
-  function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () =>
-        resolve((reader.result as string).split(",")[1]);
-      reader.onerror = reject;
-    });
-  }
-
-  async function handleFileChange(
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setScanning(true);
-    setScanError("");
-    setScanSuccess("");
-
-    try {
-      const base64 = await fileToBase64(file);
-
-      const res = await fetch("/api/scan-calendar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: base64,
-          mediaType: file.type,
-          year: new Date().getFullYear(),
-          month: new Date().getMonth() + 1,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "스캔 실패");
-      }
-
-      const data = await res.json();
-
-      if (data.events?.length > 0) {
-        const newItems = data.events.map((e: any, i: number) => ({
-          id: `ocr-${Date.now()}-${i}`,
-          label: e.title || "스캔 일정",
-          date: e.date,
-        }));
-
-        onDdayChange([...ddayItems, ...newItems]);
-
-        setScanSuccess(
-          `스캔 완료! ${newItems.length}개 일정 추가됨`
-        );
-      } else {
-        setScanSuccess("감지된 일정이 없습니다.");
-      }
-    } catch (err: any) {
-      setScanError(err.message || "스캔 중 오류 발생");
-    } finally {
-      setScanning(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
-
-  // ─────────────────────────────
-  // UI (원래 구조 유지)
-  // ─────────────────────────────
   return (
     <section className="settings-screen">
 
@@ -178,25 +113,14 @@ export function SettingsScreen({
 
         <div className="settings-dday-list">
           {ddayItems.length === 0 && (
-            <p className="settings-empty">
-              등록된 D-Day가 없어.
-            </p>
+            <p className="settings-empty">등록된 D-Day가 없어.</p>
           )}
-
           {ddayItems.map((item, index) => (
-            <div
-              key={item.id ?? `dday-${index}`}
-              className="settings-dday-item"
-            >
+            <div key={item.id ?? `dday-${index}`} className="settings-dday-item">
               <div className="settings-dday-item__info">
-                <span className="settings-dday-item__label">
-                  {item.label}
-                </span>
-                <span className="settings-dday-item__date">
-                  {item.date}
-                </span>
+                <span className="settings-dday-item__label">{item.label}</span>
+                <span className="settings-dday-item__date">{item.date}</span>
               </div>
-
               <button
                 type="button"
                 className="settings-dday-item__delete"
@@ -213,28 +137,17 @@ export function SettingsScreen({
             className="settings-dday-add__input"
             placeholder="이름"
             value={newLabel}
-            onChange={(e) => {
-              setNewLabel(e.target.value);
-              setAddError("");
-            }}
+            onChange={(e) => { setNewLabel(e.target.value); setAddError(""); }}
           />
-
           <input
             type="date"
             className="settings-dday-add__input"
             value={newDate}
-            onChange={(e) => {
-              setNewDate(e.target.value);
-              setAddError("");
-            }}
+            onChange={(e) => { setNewDate(e.target.value); setAddError(""); }}
           />
-
           {addError && (
-            <p className="settings-dday-add__error">
-              {addError}
-            </p>
+            <p className="settings-dday-add__error">{addError}</p>
           )}
-
           <button
             type="button"
             className="settings-dday-add__btn"
@@ -250,41 +163,26 @@ export function SettingsScreen({
       <div className="settings-group card">
         <div className="settings-group__head">
           <h3 className="settings-group__title">배경 테마</h3>
-          <p className="settings-group__desc">
-            앱 배경 색상을 바꿔봐
-          </p>
+          <p className="settings-group__desc">앱 배경 색상을 바꿔봐</p>
         </div>
-
         <div className="settings-themes">
           {THEMES.map((theme) => (
             <button
               key={theme.id}
               type="button"
-              className={`settings-theme-item ${
-                currentTheme === theme.id ? "is-active" : ""
-              }`}
-              onClick={() =>
-                handleThemeClick(theme.id as BgTheme)
-              }
+              className={`settings-theme-item ${currentTheme === theme.id ? "is-active" : ""}`}
+              onClick={() => handleThemeClick(theme.id as BgTheme)}
             >
               <div
                 className="settings-theme-item__swatch"
                 style={{ background: theme.gradient }}
               />
-
               <div className="settings-theme-item__text">
-                <span className="settings-theme-item__name">
-                  {theme.label}
-                </span>
-                <span className="settings-theme-item__desc">
-                  {theme.desc}
-                </span>
+                <span className="settings-theme-item__name">{theme.label}</span>
+                <span className="settings-theme-item__desc">{theme.desc}</span>
               </div>
-
               {currentTheme === theme.id && (
-                <span className="settings-theme-item__check">
-                  ✓
-                </span>
+                <span className="settings-theme-item__check">✓</span>
               )}
             </button>
           ))}
@@ -294,24 +192,15 @@ export function SettingsScreen({
       {/* ── 우리집 달력 OCR ── */}
       <div className="settings-group card">
         <div className="settings-group__head">
-          <h3 className="settings-group__title">
-            우리집 달력
-          </h3>
+          <h3 className="settings-group__title">우리집 달력</h3>
           <p className="settings-group__desc">
             집 벽달력 사진으로 일정 가져오기
           </p>
         </div>
 
-        <button
-          type="button"
-          className="settings-dday-add__btn"
-          onClick={openFilePicker}
-        >
-          {scanning ? "스캔 중..." : "📷 스캔하기"}
-        </button>
-
+        {/* hidden file input — useOcr의 inputRef 연결 */}
         <input
-          ref={fileInputRef}
+          ref={inputRef}
           type="file"
           accept="image/*"
           capture="environment"
@@ -319,15 +208,22 @@ export function SettingsScreen({
           onChange={handleFileChange}
         />
 
-        {scanError && (
-          <p className="settings-dday-add__error">
-            {scanError}
-          </p>
+        <button
+          type="button"
+          className="settings-dday-add__btn"
+          onClick={openPicker}
+          disabled={isScanning}
+        >
+          {isScanning ? progressMsg || "스캔 중..." : "📷 스캔하기"}
+        </button>
+
+        {ocrError && (
+          <p className="settings-dday-add__error">{ocrError}</p>
         )}
 
-        {scanSuccess && (
-          <p className="settings-dday-add__error">
-            {scanSuccess}
+        {ocrStatus === "done" && (
+          <p className="settings-dday-add__hint">
+            스캔 완료! D-Day 목록을 확인해봐.
           </p>
         )}
       </div>

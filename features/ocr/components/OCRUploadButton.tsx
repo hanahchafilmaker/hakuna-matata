@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { OcrEvent } from "@/features/ocr/types";
+import { useOcr } from "@/features/ocr/useOcr";
 import { OCRPreviewModal } from "./OCRPreviewModal";
+import { OcrEvent } from "@/features/ocr/types";
 import type { Task } from "@/components/tasks/task-card";
-import { parseCalendarText } from "@/lib/parseCalendarText";
+import { useState } from "react";
 
 export function OCRUploadButton({
   year,
@@ -17,59 +17,21 @@ export function OCRUploadButton({
   addTask: (task: Partial<Task>) => Promise<void>;
   onEventsParsed?: (events: OcrEvent[]) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewEvents, setPreviewEvents] = useState<OcrEvent[]>([]);
 
-  const handleImageChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const { status, progressMsg, error, events, inputRef, openPicker, handleFileChange, reset } =
+    useOcr(year, month, (parsed) => {
+      onEventsParsed?.(parsed);
+      // 파싱 완료 시 미리보기 모달 열기
+      if (parsed.length > 0) setIsPreviewOpen(true);
+    });
 
-    setIsUploading(true);
-    setProgress("Tesseract 로딩 중...");
+  const isLoading = status !== "idle" && status !== "done" && status !== "error";
 
-    try {
-      // 브라우저에서 직접 Tesseract 실행 (서버 불필요)
-      const Tesseract = await import("tesseract.js");
-
-      setProgress("이미지 분석 중...");
-
-      const result = await Tesseract.recognize(file, "kor+eng", {
-        logger: (m) => {
-          if (m.status === "recognizing text") {
-            setProgress(`인식 중... ${Math.round(m.progress * 100)}%`);
-          }
-        },
-      });
-
-      const text = result.data.text;
-      console.log("[Tesseract OCR]", text);
-
-      setProgress("일정 파싱 중...");
-
-      const events = parseCalendarText(text, year, month);
-
-      setPreviewEvents(events);
-      setIsPreviewOpen(true);
-      onEventsParsed?.(events);
-    } catch (err) {
-      console.error(err);
-      alert("OCR 처리 실패. 다시 시도해주세요.");
-    } finally {
-      setIsUploading(false);
-      setProgress("");
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  };
-
-  const openCamera = () => {
-    inputRef.current?.click();
-  };
+  function handleClose() {
+    setIsPreviewOpen(false);
+    reset();
+  }
 
   return (
     <>
@@ -79,26 +41,39 @@ export function OCRUploadButton({
         accept="image/*"
         capture="environment"
         style={{ display: "none" }}
-        onChange={handleImageChange}
+        onChange={handleFileChange}
       />
 
       <button
         type="button"
-        onClick={openCamera}
-        disabled={isUploading}
-        className={`ocr-upload-btn ${isUploading ? "is-uploading" : ""}`}
+        onClick={openPicker}
+        disabled={isLoading}
+        className={`ocr-upload-btn ${isLoading ? "is-uploading" : ""}`}
       >
-        {isUploading ? progress || "처리 중..." : "사진으로 일정 등록"}
+        {isLoading
+          ? progressMsg || "처리 중..."
+          : status === "done" && events.length === 0
+          ? "감지된 일정 없음"
+          : "사진으로 일정 등록"}
       </button>
 
-      {isPreviewOpen && (
-        <OCRPreviewModal
-          isOpen={isPreviewOpen}
-          onClose={() => setIsPreviewOpen(false)}
-          events={previewEvents}
-          addTask={addTask}
-        />
+      {error && (
+        <p className="ocr-upload-btn__error">{error}</p>
       )}
+
+      {/* 감지 없음 안내 — 모달 없이 인라인으로 */}
+      {status === "done" && events.length === 0 && !error && (
+        <p className="ocr-upload-btn__hint">
+          달력이 선명하게 찍혀 있는지 확인하고 다시 시도해보세요.
+        </p>
+      )}
+
+      <OCRPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={handleClose}
+        events={events}
+        addTask={addTask}
+      />
     </>
   );
 }
