@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 // Gemini 무료 모델: gemini-1.5-flash (분당 15회, 하루 1500회 무료)
-const GEMINI_MODEL = "gemini-1.5-flash-8b";
+const GEMINI_MODEL = "gemini-1.5-flash-8b-latest";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 export async function POST(req: NextRequest) {
