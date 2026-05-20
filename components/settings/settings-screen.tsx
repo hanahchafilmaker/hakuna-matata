@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-export type DdayItem = { label: string; date: string };
+export type DdayItem = { id: string; label: string; date: string };
 export type BgTheme = "night" | "dusk" | "forest" | "ocean";
 
 const THEMES: { id: BgTheme; label: string; desc: string; gradient: string }[] = [
@@ -33,12 +33,6 @@ const THEMES: { id: BgTheme; label: string; desc: string; gradient: string }[] =
   },
 ];
 
-/** 테마를 저장하고 AppBackground에게 즉시 알립니다. */
-function applyTheme(theme: BgTheme) {
-  localStorage.setItem("hakuna-theme", theme);
-  window.dispatchEvent(new CustomEvent("themechange", { detail: theme }));
-}
-
 export function SettingsScreen({
   ddayItems,
   onDdayChange,
@@ -54,27 +48,37 @@ export function SettingsScreen({
   const [newDate, setNewDate] = useState("");
   const [addError, setAddError] = useState("");
 
+  // 테마 저장 + 부모 반영
+  function handleThemeClick(theme: BgTheme) {
+    localStorage.setItem("hakuna-theme", theme);
+    onThemeChange(theme);
+  }
+
   function handleAdd() {
-    if (!newLabel.trim()) { setAddError("이름을 입력해줘."); return; }
-    if (!newDate) { setAddError("날짜를 입력해줘."); return; }
-    if (ddayItems.length >= 6) { setAddError("최대 6개까지 추가할 수 있어."); return; }
-    onDdayChange([...ddayItems, { label: newLabel.trim(), date: newDate }]);
+    if (!newLabel.trim()) return setAddError("이름을 입력해줘.");
+    if (!newDate) return setAddError("날짜를 입력해줘.");
+    if (ddayItems.length >= 6) return setAddError("최대 6개까지 추가할 수 있어.");
+
+    const newItem: DdayItem = {
+      id: crypto.randomUUID(),
+      label: newLabel.trim(),
+      date: newDate,
+    };
+
+    onDdayChange([...ddayItems, newItem]);
+
     setNewLabel("");
     setNewDate("");
     setAddError("");
   }
 
-  function handleDelete(index: number) {
-    onDdayChange(ddayItems.filter((_, i) => i !== index));
-  }
-
-  function handleThemeClick(id: BgTheme) {
-    applyTheme(id);      // ✅ AppBackground에 즉시 반영
-    onThemeChange(id);   // 부모 state도 업데이트 (체크 표시용)
+  function handleDelete(id: string) {
+    onDdayChange(ddayItems.filter((item) => item.id !== id));
   }
 
   return (
     <section className="settings-screen">
+
       {/* ── D-Day 관리 ── */}
       <div className="settings-group card">
         <div className="settings-group__head">
@@ -86,16 +90,18 @@ export function SettingsScreen({
           {ddayItems.length === 0 && (
             <p className="settings-empty">등록된 D-Day가 없어.</p>
           )}
-          {ddayItems.map((item, i) => (
-            <div key={i} className="settings-dday-item">
+
+          {ddayItems.map((item) => (
+            <div key={item.id} className="settings-dday-item">
               <div className="settings-dday-item__info">
                 <span className="settings-dday-item__label">{item.label}</span>
                 <span className="settings-dday-item__date">{item.date}</span>
               </div>
+
               <button
                 type="button"
                 className="settings-dday-item__delete"
-                onClick={() => handleDelete(i)}
+                onClick={() => handleDelete(item.id)}
                 aria-label="삭제"
               >
                 <Trash2 size={14} />
@@ -104,45 +110,39 @@ export function SettingsScreen({
           ))}
         </div>
 
-        {/* ✅ D-Day 추가 폼 — 날짜 placeholder 추가 */}
+        {/* D-Day 추가 */}
         <div className="settings-dday-add">
           <input
             type="text"
             className="settings-dday-add__input"
             placeholder="이름 (예: 생일, 기념일)"
             value={newLabel}
-            onChange={(e) => { setNewLabel(e.target.value); setAddError(""); }}
+            onChange={(e) => {
+              setNewLabel(e.target.value);
+              setAddError("");
+            }}
           />
 
-          {/* date input wrapper — 값이 없을 때 overlay placeholder 표시 */}
-          <div style={{ position: "relative" }}>
-            <input
-              type="date"
-              className="settings-dday-add__input"
-              value={newDate}
-              onChange={(e) => { setNewDate(e.target.value); setAddError(""); }}
-              style={{ colorScheme: "dark" }}
-            />
-            {!newDate && (
-              <span
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  pointerEvents: "none",
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.3)",
-                }}
-              >
-                날짜 선택 (YYYY-MM-DD)
-              </span>
-            )}
-          </div>
+          <input
+            type="date"
+            className="settings-dday-add__input"
+            value={newDate}
+            onChange={(e) => {
+              setNewDate(e.target.value);
+              setAddError("");
+            }}
+            style={{ colorScheme: "dark" }}
+          />
 
-          {addError && <p className="settings-dday-add__error">{addError}</p>}
-          <button type="button" className="settings-dday-add__btn" onClick={handleAdd}>
+          {addError && (
+            <p className="settings-dday-add__error">{addError}</p>
+          )}
+
+          <button
+            type="button"
+            className="settings-dday-add__btn"
+            onClick={handleAdd}
+          >
             <Plus size={14} />
             <span>추가</span>
           </button>
@@ -161,17 +161,25 @@ export function SettingsScreen({
             <button
               key={theme.id}
               type="button"
-              className={`settings-theme-item ${currentTheme === theme.id ? "is-active" : ""}`}
-              onClick={() => handleThemeClick(theme.id)}  // ✅ 즉시 반영
+              className={`settings-theme-item ${
+                currentTheme === theme.id ? "is-active" : ""
+              }`}
+              onClick={() => handleThemeClick(theme.id)}
             >
               <div
                 className="settings-theme-item__swatch"
                 style={{ background: theme.gradient }}
               />
+
               <div className="settings-theme-item__text">
-                <span className="settings-theme-item__name">{theme.label}</span>
-                <span className="settings-theme-item__desc">{theme.desc}</span>
+                <span className="settings-theme-item__name">
+                  {theme.label}
+                </span>
+                <span className="settings-theme-item__desc">
+                  {theme.desc}
+                </span>
               </div>
+
               {currentTheme === theme.id && (
                 <span className="settings-theme-item__check">✓</span>
               )}
@@ -186,17 +194,15 @@ export function SettingsScreen({
           <h3 className="settings-group__title">우리집 달력</h3>
           <p className="settings-group__desc">집 벽달력 사진으로 일정 가져오기</p>
         </div>
+
         <button
           type="button"
           className="settings-dday-add__btn"
-          onClick={() => {
-            /* 추후 카메라/앨범 연동 구현 */
-            alert("준비 중이야 🙏");
-          }}
         >
           📷&nbsp;&nbsp;스캔하기
         </button>
       </div>
+
     </section>
   );
 }
