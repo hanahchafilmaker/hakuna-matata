@@ -11,12 +11,14 @@ export function MoreScreen({
   onEdit,
   onToggle,
   onDelete,
+  addTask,
 }: {
   tasks: Task[]
   routines: Task[]
   onEdit: (task: Task) => void
   onToggle: (task: Task) => void
   onDelete: (id: string) => void
+  addTask: (task: Partial<Task>) => Promise<void>
 }) {
   const activeTasks = tasks.filter((task) => !task.done).slice(0, 8)
   const doneTasks = tasks.filter((task) => task.done).slice(0, 4)
@@ -38,7 +40,7 @@ export function MoreScreen({
           <p className="more-group__desc">사진으로 일정 등록</p>
         </div>
         <div className="section-stack">
-          <OCRUploadButton year={year} month={month} />
+          <OCRUploadButton year={year} month={month} tasks={tasks} addTask={addTask} />
         </div>
       </div>
       <div className="more-group card">

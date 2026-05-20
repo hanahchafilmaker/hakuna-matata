@@ -9,6 +9,10 @@ import { OCRUploadButton } from "@/features/ocr/components/OCRUploadButton";
 
 type Props = {
   tasks: Task[];
+  addTask: (form: Partial<Task>) => Promise<void>;
+  updateTask: (form: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  toggleTask: (task: Task) => Promise<void>;
   onEdit: (task: Task) => void;
   onToggle: (task: Task) => void;
   onDelete: (id: string) => void;

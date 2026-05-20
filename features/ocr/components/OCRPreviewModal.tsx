@@ -2,21 +2,21 @@
 
 import { useState } from 'react';
 import { OcrEvent } from '@/features/ocr/types';
-import { useTasks } from '@/hooks/use-tasks';
 import type { Task } from "@/components/tasks/task-card";
 
 export function OCRPreviewModal({
   isOpen,
   onClose,
   events,
+  addTask,
 }: {
   isOpen: boolean;
   onClose: () => void;
   events: OcrEvent[];
+  addTask: (task: Partial<Task>) => Promise<void>;
 }) {
   const [isSaving, setIsSaving] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
-  const { addTask } = useTasks();
 
   const handleSave = async () => {
     setIsSaving(true);

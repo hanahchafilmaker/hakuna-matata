@@ -121,6 +121,10 @@ export default function Page() {
           {view === "calendar" && (
             <CalendarView
               tasks={tasks}
+              addTask={addTask}
+              updateTask={updateTask}
+              deleteTask={deleteTask}
+              toggleTask={toggleTask}
               onEdit={openEdit}
               onToggle={handleToggle}
               onDelete={handleDelete}

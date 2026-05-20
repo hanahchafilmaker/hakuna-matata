@@ -1,11 +1,12 @@
-'use client'
-
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { supabase, type TaskRow } from '@/lib/supabase/client'
 import type { Task } from '@/components/tasks/task-card'
 
-// ── 타입 변환 ──────────────────────────────────────
+// Singleton realtime subscription manager
+let tasksSubscription: any = null
+let tasksListeners: Set<(tasks: Task[]) => void> = new Set()
 
+// ── 타입 변환 ──────────────────────────────────────
 function rowToTask(row: TaskRow): Task {
   return {
     id:         row.id,
@@ -38,15 +39,56 @@ function taskToRow(task: Partial<Task>): Partial<Omit<TaskRow, 'id' | 'created_a
 }
 
 // ── 훅 ────────────────────────────────────────────
-
 export function useTasks() {
   const [tasks, setTasks]   = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError]   = useState<string | null>(null)
 
-  // Realtime 콜백 내에서 최신 tasks 참조
-  const tasksRef = useRef<Task[]>([])
-  tasksRef.current = tasks
+  // Realtime listeners management
+  useEffect(() => {
+    // Register listener for this component instance
+    const listener = (newTasks: Task[]) => {
+      setTasks(newTasks)
+    }
+
+    tasksListeners.add(listener)
+
+    // Initialize subscription if this is the first listener
+    if (!tasksSubscription) {
+      tasksSubscription = supabase
+        .channel('tasks-realtime')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'tasks' },
+          async () => {
+            // Fetch latest tasks when any change occurs
+            const { data, error } = await supabase
+              .from('tasks')
+              .select('*')
+              .order('created_at', { ascending: true })
+
+            if (error) {
+              console.error('Realtime error:', error)
+              return
+            }
+            // Notify all listeners with fresh data (properly convert TaskRow to Task)
+            tasksListeners.forEach(l => l(data.map(rowToTask)))
+          }
+        )
+        .subscribe()
+    }
+
+    // Cleanup on unmount
+    return () => {
+      tasksListeners.delete(listener)
+
+      // If no more listeners, cleanup subscription
+      if (tasksListeners.size === 0 && tasksSubscription) {
+        supabase.removeChannel(tasksSubscription)
+        tasksSubscription = null
+      }
+    }
+  }, [])
 
   // 초기 전체 로드
   const fetchAll = useCallback(async () => {
@@ -59,59 +101,17 @@ export function useTasks() {
     if (error) {
       setError(error.message)
     } else {
-      setTasks((data as TaskRow[]).map(rowToTask))
+      setTasks(data as Task[])
       setError(null)
     }
     setLoading(false)
   }, [])
 
-  // Realtime 구독
   useEffect(() => {
     fetchAll()
-
-    const channel = supabase
-      .channel('tasks-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tasks' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const newTask = rowToTask(payload.new as TaskRow)
-            setTasks((prev) => {
-              // optimistic update와 충돌 방지: 이미 있으면 id만 교정
-              if (prev.some((t) => t.id === newTask.id)) return prev
-              // temp- ID가 있으면 교체, 없으면 추가
-              const tempIdx = prev.findIndex((t) => t.id.startsWith('temp-'))
-              if (tempIdx !== -1) {
-                const next = [...prev]
-                next[tempIdx] = newTask
-                return next
-              }
-              return [...prev, newTask]
-            })
-          }
-
-          if (payload.eventType === 'UPDATE') {
-            const updated = rowToTask(payload.new as TaskRow)
-            setTasks((prev) =>
-              prev.map((t) => (t.id === updated.id ? updated : t))
-            )
-          }
-
-          if (payload.eventType === 'DELETE') {
-            setTasks((prev) => prev.filter((t) => t.id !== payload.old.id))
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [fetchAll])
+  }, [])
 
   // ── CRUD ──────────────────────────────────────────
-
   const addTask = useCallback(async (form: Partial<Task>) => {
     const payload = {
       text:       form.text?.trim() ?? '',
@@ -167,8 +167,7 @@ export function useTasks() {
     if (error) {
       if (backup) {
         setTasks((prev) =>
-          prev.map((t) => (t.id === form.id ? backup : t))
-        )
+          prev.map((t) => (t.id === form.id ? backup : t)))
       } else {
         await fetchAll()
       }
@@ -196,6 +195,10 @@ export function useTasks() {
   const toggleTask = useCallback(async (task: Task) => {
     await updateTask({ id: task.id, done: !task.done })
   }, [updateTask])
+
+  // Realtime 콜백 내에서 최신 tasks 참조
+  const tasksRef = useRef<Task[]>([])
+  tasksRef.current = tasks
 
   return { tasks, loading, error, addTask, updateTask, deleteTask, toggleTask }
 }
