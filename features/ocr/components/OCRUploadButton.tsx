@@ -5,26 +5,31 @@ import { OcrEvent } from '@/features/ocr/types';
 import { OCRPreviewModal } from './OCRPreviewModal';
 import type { Task } from '@/components/tasks/task-card';
 
-export function OCRUploadButton({
-  year,
-  month,
-  addTask,
-  onEventsParsed
-}: {
+// Props 타입을 별도 인터페이스로 분리하면 관리하기 편합니다.
+interface OCRUploadButtonProps {
   year: number;
   month: number;
   addTask: (task: Partial<Task>) => Promise<void>;
   onEventsParsed?: (events: OcrEvent[]) => void;
-}) {
+  tasks: Task[]; // <--- 이 줄을 추가했습니다.
+}
+
+export function OCRUploadButton({
+  year,
+  month,
+  addTask,
+  onEventsParsed,
+  tasks, // <--- 여기에도 추가했습니다.
+}: OCRUploadButtonProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewEvents, setPreviewEvents] = useState<OcrEvent[]>([]);
 
+  // ... (이하 나머지 코드는 동일)
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        // reader.result is data: URL; we need to extract the base64 part
         if (typeof reader.result === 'string') {
           resolve(reader.result.split(',')[1]);
         } else {
@@ -72,10 +77,8 @@ export function OCRUploadButton({
     }
   };
 
-
   return (
     <>
-      {/* Hidden file input */}
       <input
         type="file"
         accept="image/*"
@@ -92,7 +95,6 @@ export function OCRUploadButton({
         {isUploading ? '처리 중...' : '사진으로 일정 등록'}
       </button>
 
-      {/* Preview Modal */}
       {isPreviewOpen && (
         <OCRPreviewModal
           isOpen={isPreviewOpen}
@@ -103,5 +105,4 @@ export function OCRUploadButton({
       )}
     </>
   );
-
 }
