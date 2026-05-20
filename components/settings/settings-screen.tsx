@@ -139,8 +139,8 @@ export function SettingsScreen({
       const data = await res.json();
 
       if (data.events?.length > 0) {
-        const newItems = data.events.map((e: any) => ({
-          id: crypto.randomUUID(),
+        const newItems = data.events.map((e: any, i: number) => ({
+          id: `ocr-${Date.now()}-${i}`,
           label: e.title || "스캔 일정",
           date: e.date,
         }));
@@ -183,9 +183,9 @@ export function SettingsScreen({
             </p>
           )}
 
-          {ddayItems.map((item) => (
+          {ddayItems.map((item, index) => (
             <div
-              key={item.id}
+              key={item.id ?? `dday-${index}`}
               className="settings-dday-item"
             >
               <div className="settings-dday-item__info">
