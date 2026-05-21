@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { useOcr } from "@/features/ocr/useOcr";
+import { useOcr } from "@/features/ocr/hooks/useOcr";
+import type { Task } from "@/components/tasks/task-card";
 
 export type DdayItem = { id: string; label: string; date: string };
 export type BgTheme = "night" | "dusk" | "forest" | "ocean";
@@ -48,26 +49,55 @@ export function SettingsScreen({
   const [newLabel, setNewLabel] = useState("");
   const [newDate, setNewDate] = useState("");
   const [addError, setAddError] = useState("");
+  const [ocrStatus, setOcrStatus] = useState<"idle" | "processing" | "done" | "error">("idle");
+  const [ocrProgressMsg, setOcrProgressMsg] = useState<string>("");
+  const [ocrError, setOcrError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { runOcr } = useOcr();
 
   // ─── OCR: useOcr 훅으로 통일 ─────────────────────────────
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
 
-  const { status: ocrStatus, progressMsg, error: ocrError, inputRef, openPicker, handleFileChange } =
-    useOcr(currentYear, currentMonth, (events) => {
-      if (events.length === 0) return;
-
-      // OcrEvent → DdayItem 변환 (settings-screen은 D-Day 목록에 저장)
-      const newItems: DdayItem[] = events.map((e, i) => ({
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setOcrStatus("processing");
+    setOcrProgressMsg("처리 중...");
+    setOcrError(null);
+    try {
+      const result = await runOcr(file);
+      // Convert normalized events to DdayItem
+      // result.normalized is array of { text, start, end }? Wait, we changed normalize to return OcrEvent[]?
+      // Actually, runOcrPipeline returns raw, normalized (OcrEvent[]), tasks, preview.
+      // We'll use normalized as OcrEvent[]
+      const normalized = result.normalized as any[]; // TODO: better typing
+      if (normalized.length === 0) {
+        setOcrStatus("done");
+        setOcrProgressMsg("감지된 일정 없음");
+        return;
+      }
+      const newItems: DdayItem[] = normalized.map((e, i) => ({
         id: `ocr-${Date.now()}-${i}`,
         label: e.title || "스캔 일정",
         date: e.date,
       }));
-
       onDdayChange([...ddayItems, ...newItems]);
-    });
+      setOcrStatus("done");
+      setOcrProgressMsg(`${normalized.length}개 일정 감지됨`);
+    } catch (err) {
+      console.error(err);
+      setOcrStatus("error");
+      setOcrError("OCR 처리 중 오류가 발생했습니다.");
+    } finally {
+      // Reset input
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }
+  };
 
-  const isScanning = ocrStatus !== "idle" && ocrStatus !== "done" && ocrStatus !== "error";
+  const handleOpenPicker = () => {
+    inputRef.current?.click();
+  };
 
   // ─── D-DAY ───────────────────────────────────────────────
 
@@ -198,7 +228,7 @@ export function SettingsScreen({
           </p>
         </div>
 
-        {/* hidden file input — useOcr의 inputRef 연결 */}
+        {/* hidden file input */}
         <input
           ref={inputRef}
           type="file"
@@ -211,10 +241,12 @@ export function SettingsScreen({
         <button
           type="button"
           className="settings-dday-add__btn"
-          onClick={openPicker}
-          disabled={isScanning}
+          onClick={handleOpenPicker}
+          disabled={ocrStatus === "processing"}
         >
-          {isScanning ? progressMsg || "스캔 중..." : "📷 스캔하기"}
+          {ocrStatus === "processing"
+            ? ocrProgressMsg || "스캔 중..."
+            : "📷 스캔하기"}
         </button>
 
         {ocrError && (

@@ -16,8 +16,8 @@ import { todayStr } from "@/lib/dateUtils";
 import type { Task } from "@/components/tasks/task-card";
 
 const DEFAULT_DDAYS: DdayItem[] = [
-  { label: "금연", date: "2024-11-23" },
-  { label: "민효와 처음 만난 날", date: "2024-06-30" },
+  { id: "dday-1", label: "금연", date: "2024-11-23" },
+  { id: "dday-2", label: "민효와 처음 만난 날", date: "2024-06-30" },
 ];
 
 export default function Page() {

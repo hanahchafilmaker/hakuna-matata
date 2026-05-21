@@ -1,46 +1,32 @@
-import type { OcrEvent } from '@/features/ocr/types';
-import type { Task } from '@/components/tasks/task-card';
+// ─── mapOcrToTask.ts ─────────────────────────────────────────────────
+// OCR 정규화 결과를 UI 프리뷰용 객체로 변환
 
-export function mapOcrToTask(event: OcrEvent): Partial<Task> {
-  return {
-    text: cleanTitle(event.title),
-    date_start: normalizeDate(event.date),
-    date_end: normalizeDate(event.date),
-    time: normalizeTime(event.time),
-    assignee: '함께',
-    type: 'ocr',
-    repeat: 'none',
-    done: false,
-    memo: '',
-  };
+/**
+ * OCR 정규화 아이템
+ */
+export interface NormalizedOcrItem {
+  text: string;
+  start: number | null;
+  end: number | null;
 }
 
-function cleanTitle(title: string) {
-  return title
-    .replace(/\s+/g, ' ')
-    .replace(/[()[\]]/g, '')
-    .trim();
+/**
+ * 프리뷰용 객체
+ */
+export interface PreviewItem {
+  label: string;
+  range: string;
 }
 
-function normalizeDate(date: string) {
-  // 2026.05.20 / 2026-5-20 / 5월 20일 대응
-  const match = date.match(/(\d{1,4})[^\d](\d{1,2})[^\d](\d{1,2})/);
+/**
+ * 정규화된 배열을 프리뷰 배열로 변환
+ * @param items - OCR 정규화 결과
+ */
+export function mapOcrToTask(items: NormalizedOcrItem[]): PreviewItem[] {
+  if (!Array.isArray(items)) return [];
 
-  if (!match) return date;
-
-  const [, y, m, d] = match;
-  const year = y.length === 2 ? `20${y}` : y;
-
-  return `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-}
-
-function normalizeTime(time?: string) {
-  if (!time) return undefined;
-
-  const match = time.match(/(\d{1,2}):(\d{2})/);
-  if (!match) return time;
-
-  const [, h, m] = match;
-
-  return `${h.padStart(2, '0')}:${m}`;
+  return items.map((item) => ({
+    label: item.text,
+    range: `${item.start ?? "?"} ~ ${item.end ?? "?"}`,
+  }));
 }

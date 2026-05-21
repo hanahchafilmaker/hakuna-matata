@@ -4,6 +4,7 @@ import { useState } from "react";
 import { OcrEvent } from "@/features/ocr/types";
 import type { Task } from "@/components/tasks/task-card";
 import { mapOcrToTask } from "../utils/mapOcrToTask";
+import { mapToTask } from "../core/mapToTask";
 
 export function OCRPreviewModal({
   isOpen,
@@ -37,7 +38,7 @@ export function OCRPreviewModal({
       if (!event?.title || !event?.date) continue;
 
       try {
-        await addTask(mapOcrToTask(event));
+        await addTask(mapToTask(event));
         count++;
       } catch (err) {
         console.error("일정 저장 실패:", err);

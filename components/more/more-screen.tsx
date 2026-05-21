@@ -124,9 +124,11 @@ export function MoreScreen({
 
       {/* OCR */}
       <OCRUploadButton
-        year={year}
-        month={month}
         addTask={addTask}
+        onEventsParsed={(events) => {
+          // Optionally handle parsed events
+          console.log("OCR parsed events:", events);
+        }}
       />
 
       {/* Active tasks */}

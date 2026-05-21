@@ -96,8 +96,26 @@ function buildBars(tasks: Task[], weeks: Date[][]): Bar[] {
       const sc = diffDays(ws, rawS < ws ? ws : rawS);
       const ec = diffDays(ws, rawE > we ? we : rawE);
 
+      // Safety: ensure sc and ec are valid numbers and sc <= ec
+      if (Number.isNaN(sc) || Number.isNaN(ec) || sc > ec) {
+        console.warn('Invalid calendar bar dimensions:', { task, sc, ec, ws, we });
+        return; // skip this task to avoid infinite loops
+      }
+
+      // Find the first row that has no overlap with existing intervals at that row
       let row = 0;
-      while (used.some((r) => r.row === row && !(ec < r.sc || sc > r.ec))) row++;
+      const MAX_ROWS = 100; // safety cap to prevent infinite loops
+      let overlap: boolean;
+      do {
+        overlap = used.some((r) => r.row === row && !(ec < r.sc || sc > r.ec));
+        if (overlap) row++;
+      } while (overlap && row < MAX_ROWS);
+
+      if (row >= MAX_ROWS) {
+        console.warn('Exceeded max rows for calendar layout; possible data issue.', { task, sc, ec });
+        // fallback: place at row 0 (will overlap but prevents freeze)
+        row = 0;
+      }
 
       used.push({ sc, ec, row });
       bars.push({ task, weekKey, startCol: sc, endCol: ec, row });
@@ -499,8 +517,11 @@ export function CalendarView({ tasks, onEdit, onToggle }: Props) {
             <ChevronRight size={15} />
           </button>
           <OCRUploadButton
-            year={currentYear}
-            month={currentMonth + 1}
+            addTask={addTask}
+            onEventsParsed={(events) => {
+              // Optionally handle parsed events
+              console.log("OCR parsed events:", events);
+            }}
           />
         </div>
       </div>
