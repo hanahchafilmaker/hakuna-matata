@@ -1,6 +1,6 @@
 // ─── runOcrPipeline.ts ─────────────────────────────────────────────
 // OCR → 정규화 (OCrEvent) → task 변환
-import { ocr } from "@/features/ocr/core/ocr";
+import { runOCR } from "@/features/ocr/core/ocr";
 import { normalizeEvent } from "@/features/ocr/core/normalize";
 import { mapToTask } from "@/features/ocr/core/mapToTask";
 
@@ -11,7 +11,7 @@ import { mapToTask } from "@/features/ocr/core/mapToTask";
 export async function runOcrPipeline(file: File) {
   try {
     // 1️⃣ OCR 추출
-    const raw = await ocr(file);
+    const raw = await runOCR(file);
 
     // 2️⃣ 정규화 (OCrEvent[])
     const normalized = raw.map(normalizeEvent);
