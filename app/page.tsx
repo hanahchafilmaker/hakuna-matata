@@ -38,6 +38,9 @@ export default function Page() {
       sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
     };
     return tasks.filter((task) => {
+      // Exclude calendar events from routines calculation
+      if (task.type === "calendar") return false;
+
       const repeat = (task.repeat || "none").toLowerCase();
       if (repeat === "none") return false;
       if (repeat === "daily") return true;
