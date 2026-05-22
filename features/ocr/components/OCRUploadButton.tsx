@@ -1,6 +1,6 @@
 "use client";
 
-import { useOcr } from "@/features/ocr/useOcr";
+import { useOcr } from "@/features/ocr/hooks/useOcr";
 import { OCRPreviewModal } from "./OCRPreviewModal";
 import { OcrEvent } from "@/features/ocr/types";
 import type { Task } from "@/components/tasks/task-card";
@@ -18,6 +18,7 @@ export function OCRUploadButton({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const processingRef = useRef(false);
   const { runOcr } = useOcr();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,19 +28,21 @@ export function OCRUploadButton({
   const handleFileChangeAsync = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // 중복 OCR 방지
+    if (processingRef.current) return;
+    processingRef.current = true;
+
     setIsLoading(true);
     setError(null);
     try {
       const result = await runOcr(file);
-      // result.preview is an array of { label: string; range: string }
-      // We'll use it for the modal preview
-      setEvents(result.preview as unknown as OcrEvent[]);
+      // result.normalized is an array of OcrEvent
+      setEvents(result.normalized as OcrEvent[]);
       if (onEventsParsed) {
-        // For compatibility, we pass an empty array as OcrEvent[]
-        // In the future, we might want to convert preview to OcrEvent shape
-        onEventsParsed([]);
+        // For compatibility, we pass the normalized events as OcrEvent[]
+        onEventsParsed(result.normalized as OcrEvent[]);
       }
-      if (result.preview.length > 0) {
+      if (result.normalized.length > 0) {
         setIsPreviewOpen(true);
       }
     } catch (err) {
@@ -47,6 +50,7 @@ export function OCRUploadButton({
       setError("OCR 처리 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
+      processingRef.current = false;
       // Reset input value to allow same file to be selected again
       if (inputRef.current) {
         inputRef.current.value = "";
