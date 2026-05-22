@@ -136,10 +136,10 @@ export function HomeScreen({
   const visibleDdays = ddayItems ?? defaultDdays;
 
   const todayTasks = tasks
-    .filter((t) => !t.done && t.date_start === today)
+    .filter((t) => !t.done && t.date_start === today && t.type !== "calendar")
     .slice(0, 4);
   const upcomingTasks = tasks
-    .filter((t) => !t.done && t.date_start > today)
+    .filter((t) => !t.done && t.date_start > today && t.type !== "calendar")
     .sort((a, b) => a.date_start.localeCompare(b.date_start))
     .slice(0, 4);
   const visibleRoutines = routines.filter((t) => !t.done).slice(0, 3);

@@ -7,7 +7,7 @@ export function mapToTask(event: OcrEvent): Partial<Task> {
     date_start: event.date,
     date_end: event.date,
     time: event.time ?? undefined,
-    type: 'ocr',
+    type: 'calendar',
     done: false,
     memo: '',
   };

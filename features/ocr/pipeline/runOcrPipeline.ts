@@ -17,7 +17,7 @@ export async function runOcrPipeline(file: File) {
     const normalized = raw.map(normalizeEvent);
 
     // 3️⃣ task 변환 (캘린더용 구조)
-    const tasks = mapToTask(normalized);
+    const tasks = normalized.map(mapToTask);
 
     return {
       raw,
