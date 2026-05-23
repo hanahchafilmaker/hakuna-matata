@@ -1,22 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { OcrEvent } from "@/features/ocr/types";
 import type { Task } from "@/components/tasks/task-card";
-import { mapOcrToTask } from "../utils/mapOcrToTask";
-import { mapToTask } from "../core/mapToTask";
+import type { OcrEvent } from "@/features/ocr/types";
+import { mapToTask } from "@/features/ocr/core/mapToTask";
+
+type OCRPreviewModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  events: OcrEvent[];
+  addTask: (task: Partial<Task>) => Promise<void>;
+};
 
 export function OCRPreviewModal({
   isOpen,
   onClose,
   events,
   addTask,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  events: OcrEvent[];
-  addTask: (task: Partial<Task>) => Promise<void>;
-}) {
+}: OCRPreviewModalProps) {
   // "idle" | "saving" | "saved"
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [savedCount, setSavedCount] = useState(0);

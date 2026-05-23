@@ -6,13 +6,15 @@ import { OcrEvent } from "@/features/ocr/types";
 import type { Task } from "@/components/tasks/task-card";
 import { useState, useRef } from "react";
 
+type OCRUploadButtonProps = {
+  addTask: (task: Partial<Task>) => Promise<void>;
+  onEventsParsed?: (events: OcrEvent[]) => void;
+};
+
 export function OCRUploadButton({
   addTask,
   onEventsParsed,
-}: {
-  addTask: (task: Partial<Task>) => Promise<void>;
-  onEventsParsed?: (events: OcrEvent[]) => void;
-}) {
+}: OCRUploadButtonProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [events, setEvents] = useState<OcrEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
