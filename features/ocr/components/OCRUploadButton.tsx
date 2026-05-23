@@ -28,16 +28,26 @@ export function OCRUploadButton({
   };
 
   const handleFileChangeAsync = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("file selected");
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log("no file");
+      return;
+    }
+    console.log("file:", file);
     // 중복 OCR 방지
-    if (processingRef.current) return;
+    if (processingRef.current) {
+      console.log("processing already, skipping");
+      return;
+    }
     processingRef.current = true;
 
     setIsLoading(true);
     setError(null);
     try {
+      console.log("starting OCR");
       const result = await runOcr(file);
+      console.log("OCR RESULT", result);
       // result.normalized is an array of OcrEvent
       setEvents(result.normalized as OcrEvent[]);
       if (onEventsParsed) {
@@ -61,6 +71,7 @@ export function OCRUploadButton({
   };
 
   const handleOpenPicker = () => {
+    console.log("open picker");
     inputRef.current?.click();
   };
 
