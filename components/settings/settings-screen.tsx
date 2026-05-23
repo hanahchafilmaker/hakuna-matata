@@ -255,7 +255,7 @@ export function SettingsScreen({
 
         {ocrStatus === "done" && (
           <p className="settings-dday-add__hint">
-            스캔 완료! D-Day 목록을 확인해봐.
+            스캔 완료! 캘린더 일정을 확인해봐!
           </p>
         )}
       </div>

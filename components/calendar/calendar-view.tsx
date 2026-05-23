@@ -367,7 +367,7 @@ function DayPanel({
   );
 }
 
-export function CalendarView({ tasks, onEdit, onToggle }: Props) {
+export function CalendarView({ tasks, addTask, onEdit, onToggle }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
   const [selected, setSelected] = useState<Date | null>(() => new Date());
 
