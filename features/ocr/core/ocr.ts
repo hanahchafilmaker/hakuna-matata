@@ -135,9 +135,9 @@ function buildCleanCanvas(
 
   const isGridRow = new Uint8Array(H);
   const isGridCol = new Uint8Array(W);
-  // 전체 축소 해상도 기준, 가로의 55% 혹은 세로의 30%를 넘어서는 선형 어두운 픽셀군을 그리드로 파싱
-  for (let y = 0; y < H; y++) if (rowDark[y] > W * 0.55) isGridRow[y] = 1;
-  for (let x = 0; x < W; x++) if (colDark[x] > H * 0.30) isGridCol[x] = 1;
+  // 전체 축소 해상도 기준, 가로의 35% 혹은 세로의 15%를 넘어서는 선형 어두운 픽셀군을 그리드로 파싱 (격자선 오인식 방지)
+  for (let y = 0; y < H; y++) if (rowDark[y] > W * 0.35) isGridRow[y] = 1;
+  for (let x = 0; x < W; x++) if (colDark[x] > H * 0.15) isGridCol[x] = 1;
 
   for (let i = 0; i < W * H; i++) {
     const x = i % W;
@@ -246,7 +246,12 @@ async function extractByGrid(
 
 function parseEventLine(line: string, date: string): OcrEvent | null {
   if (line.length < 2) return null;
-  if (/^[a-zA-Z\s\-_/\\|]+$/.test(line)) return null; // 불필요한 기호나 깨진 영문 문자열 노이즈 컷
+  // 영문과 기호만으로 구성된 줄 제거 (격자선 오인식 방지)
+  if (/^[a-zA-Z\s\-_/\\|.~\[\]{}():]+$/.test(line)) return null;
+  // 한글이 2자 미만이면 제거의미 없는 텍스트 필터링
+  if (line.replace(/[^가-힣]/g, '').length < 2) return null;
+  // 숫자와 기호만으로 구성된 줄 제거
+  if (/^[\d\s~\-=\[\]|]+$/.test(line)) return null;
 
   let title = line;
   let person: string | undefined;
