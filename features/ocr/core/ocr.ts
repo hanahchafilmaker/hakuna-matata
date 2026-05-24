@@ -20,8 +20,8 @@ export async function runOCR(blob: Blob): Promise<{
     const origW = imageBitmap.width;
     const origH = imageBitmap.height;
 
-    // ─── [Phase 1] 이미지 다운샘플링 (최대 1200px, 비율 유지) ───
-    const MAX_SIZE = 1200;
+    // ─── [Phase 1] 이미지 다운샘플링 (최대 2400px, 비율 유지) ───
+    const MAX_SIZE = 2400;
     const scale = Math.min(1, MAX_SIZE / Math.max(origW, origH));
     const rW = Math.floor(origW * scale);
     const rH = Math.floor(origH * scale);
@@ -187,9 +187,21 @@ async function extractByGrid(
 
   const cellCanvas = document.createElement('canvas');
   const cellCtx = cellCanvas.getContext('2d')!;
+  const pad = 6; // 외곽 테두리 노이즈 유입 방지 패딩
+  const MIN_CELL_SIZE = 30; // 최소 셀 크기
 
-  // 1200px 축소본 기준이므로 최적의 가독성을 위해 업스케일 SCALE을 2.0으로 세팅
-  const SCALE = 2.0;
+  // 셀 크기에 따라 적절한 스케일링 적용
+  // 매우 작은 이미지의 경우 과도한 업스케일링을 피함
+  const cellHeight = cellH - pad * 2;
+  if (cellHeight < MIN_CELL_SIZE) {
+    // 셀이 너무 작으면 최소 크기로 설정하고 적당한 스케일 적용
+    const targetHeight = Math.max(cellHeight, 20); // 최소 20px
+    const SCALE = Math.max(1.0, 60 / targetHeight); // 최대 60px 높이로 확대 (과도한 업스케일 방지)
+  } else {
+    // 충분히 큰 셀의 경우 기존 로직 적용
+    const targetHeight = Math.max(cellHeight, MIN_CELL_SIZE);
+    const SCALE = Math.max(1.0, 100 / targetHeight); // 최소 100px 높이로 확대
+  }
 
   for (let week = 0; week < weeks; week++) {
     for (let dow = 0; dow < 7; dow++) {
@@ -198,7 +210,6 @@ async function extractByGrid(
 
       const x = gLeft + dow * cellW;
       const y = gTop + week * cellH;
-      const pad = 6; // 외곽 테두리 노이즈 유입 방지 패딩
 
       cellCanvas.width = Math.floor((cellW - pad * 2) * SCALE);
       cellCanvas.height = Math.floor((cellH - pad * 2) * SCALE);
@@ -216,7 +227,7 @@ async function extractByGrid(
 
       try {
         const { data: { text } } = await Tesseract.recognize(cellBlob, 'kor+eng', {
-          logger: () => {},
+          logger: (m) => console.log("[OCR]", m),
         });
 
         // ─── [Phase 5] 룰 기반 컨텍스트 정제 및 데이터 구조화 ───
