@@ -20,7 +20,7 @@ export async function runOCR(blob: Blob): Promise<{
     const mimeType = blob.type as "image/jpeg" | "image/png" | "image/webp";
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash-lite",
       contents: [
         {
           parts: [
