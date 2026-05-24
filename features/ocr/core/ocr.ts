@@ -1,8 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { OcrEvent } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
-
 /**
  * Run OCR on an image blob using Gemini Vision.
  * @param blob - Image file blob
@@ -13,6 +11,8 @@ export async function runOCR(blob: Blob): Promise<{
   normalized: OcrEvent[];
   tasks: OcrEvent[];
 }> {
+  // Initialize AI inside function to avoid browser API key issues
+  const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
   console.log("[OCR] 프로세스 시작 (Gemini Vision)");
 
   try {
