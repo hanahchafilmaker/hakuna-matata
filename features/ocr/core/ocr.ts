@@ -11,8 +11,12 @@ export async function runOCR(blob: Blob): Promise<{
   normalized: OcrEvent[];
   tasks: OcrEvent[];
 }> {
+  // Debug: Check if API key is available
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  console.log('[OCR] API Key 존재 여부:', !!apiKey, apiKey?.slice(0, 8) + '...'); // 앞 8자만 출력
+
   // Initialize AI inside function to avoid browser API key issues
-  const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
+  const ai = new GoogleGenAI({ apiKey: apiKey! });
   console.log("[OCR] 프로세스 시작 (Gemini Vision)");
 
   try {
