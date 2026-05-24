@@ -59,7 +59,7 @@ export function OCRUploadButton({
       }
     } catch (err) {
       console.error(err);
-      setError("OCR 처리 중 오류가 발생했습니다.");
+      setError(err instanceof Error ? err.message : "OCR 처리 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
       processingRef.current = false;
