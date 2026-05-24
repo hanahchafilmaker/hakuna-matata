@@ -185,23 +185,26 @@ async function extractByGrid(
   const cellW = (gRight - gLeft) / 7;
   const cellH = (gBottom - gTop) / weeks;
 
+  const pad = 6; // 외곽 테두리 노이즈 유입 방지 패딩
+  const innerW = cellW - pad * 2;
+  const innerH = cellH - pad * 2;
+
+  // 너무 작은 셀은 전체 처리 중단
+  const MIN_CELL_PX = 10;
+  if (innerW < MIN_CELL_PX || innerH < MIN_CELL_PX) {
+    console.warn(`[OCR] 셀이 너무 작아 처리 중단: ${innerW.toFixed(1)}x${innerH.toFixed(1)}px`);
+    return events;
+  }
+
+  // SCALE을 루프 밖에서 단일 선언 (if/else 블록 스코프 오류 방지)
+  // 목표 높이 120px 기준, 최소 1.0 / 최대 4.0 제한
+  const TARGET_HEIGHT = 120;
+  const SCALE = Math.min(4.0, Math.max(1.0, TARGET_HEIGHT / innerH));
+
+  console.log(`[OCR] 셀 크기: ${innerW.toFixed(1)}x${innerH.toFixed(1)}px, SCALE: ${SCALE.toFixed(2)}`);
+
   const cellCanvas = document.createElement('canvas');
   const cellCtx = cellCanvas.getContext('2d')!;
-  const pad = 6; // 외곽 테두리 노이즈 유입 방지 패딩
-  const MIN_CELL_SIZE = 30; // 최소 셀 크기
-
-  // 셀 크기에 따라 적절한 스케일링 적용
-  // 매우 작은 이미지의 경우 과도한 업스케일링을 피함
-  const cellHeight = cellH - pad * 2;
-  if (cellHeight < MIN_CELL_SIZE) {
-    // 셀이 너무 작으면 최소 크기로 설정하고 적당한 스케일 적용
-    const targetHeight = Math.max(cellHeight, 20); // 최소 20px
-    const SCALE = Math.max(1.0, 60 / targetHeight); // 최대 60px 높이로 확대 (과도한 업스케일 방지)
-  } else {
-    // 충분히 큰 셀의 경우 기존 로직 적용
-    const targetHeight = Math.max(cellHeight, MIN_CELL_SIZE);
-    const SCALE = Math.max(1.0, 100 / targetHeight); // 최소 100px 높이로 확대
-  }
 
   for (let week = 0; week < weeks; week++) {
     for (let dow = 0; dow < 7; dow++) {
@@ -211,23 +214,32 @@ async function extractByGrid(
       const x = gLeft + dow * cellW;
       const y = gTop + week * cellH;
 
-      cellCanvas.width = Math.floor((cellW - pad * 2) * SCALE);
-      cellCanvas.height = Math.floor((cellH - pad * 2) * SCALE);
+      const scaledW = Math.floor(innerW * SCALE);
+      const scaledH = Math.floor(innerH * SCALE);
+
+      // 스케일 후에도 너무 작으면 해당 셀 스킵
+      if (scaledW < 3 || scaledH < 3) {
+        console.warn(`[OCR] 스케일 후 셀 스킵: ${scaledW}x${scaledH}px (${month}월 ${dayNum}일)`);
+        continue;
+      }
+
+      cellCanvas.width = scaledW;
+      cellCanvas.height = scaledH;
       cellCtx.fillStyle = 'white';
-      cellCtx.fillRect(0, 0, cellCanvas.width, cellCanvas.height);
+      cellCtx.fillRect(0, 0, scaledW, scaledH);
 
       // 분리된 클린 레이어로부터 매핑 칸 크롭 후 캔버스 업스케일링 드로우
       cellCtx.drawImage(
         cleanCanvas,
-        x + pad, y + pad, cellW - pad * 2, cellH - pad * 2,
-        0, 0, cellCanvas.width, cellCanvas.height
+        x + pad, y + pad, innerW, innerH,
+        0, 0, scaledW, scaledH
       );
 
       const cellBlob = await canvasToBlob(cellCanvas);
 
       try {
         const { data: { text } } = await Tesseract.recognize(cellBlob, 'kor+eng', {
-          logger: (m) => console.log("[OCR]", m),
+          logger: () => {},
         });
 
         // ─── [Phase 5] 룰 기반 컨텍스트 정제 및 데이터 구조화 ───
@@ -239,7 +251,7 @@ async function extractByGrid(
 
         if (lines.length === 0) continue;
 
-        console.log(`[OCR 파싱 성공] ${month}월 ${dayNum}일 칸 데이터:`, lines);
+        console.log(`[OCR 파싱 성공] ${month}월 ${dayNum}일:`, lines);
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 
         for (const line of lines) {
